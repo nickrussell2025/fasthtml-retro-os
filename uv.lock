@@ -130,6 +130,7 @@ name = "fasthtml-retro-os"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "fastlite" },
     { name = "pydantic" },
     { name = "python-fasthtml" },
     { name = "ruff" },
@@ -142,6 +143,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "fastlite", specifier = ">=0.2.1" },
     { name = "pydantic", specifier = ">=2.11.7" },
     { name = "python-fasthtml", specifier = ">=0.12.21" },
     { name = "ruff", specifier = ">=0.12.3" },
