@@ -9,6 +9,7 @@ wheels/
 # Virtual environments
 .venv
 
+.sesskey
 
 db_testing.py
 users.db
