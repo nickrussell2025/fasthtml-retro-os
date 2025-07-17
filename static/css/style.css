@@ -1,14 +1,5 @@
 /* =================================
-   RESET AND BASE
-   ================================= */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-/* =================================
-   THEME VARIABLES
+   VARIABLES & RESET
    ================================= */
 :root {
     --neon-green: #00ff41;
@@ -16,11 +7,16 @@
     --neon-green-glow: #00ff4108;
     --bg-black: #000;
     --font-mono: 'Courier New', monospace;
+    --border-radius: 5px;
+    --spacing: 8px;
 }
 
-/* =================================
-   BASE LAYOUT
-   ================================= */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
 body {
     font-family: var(--font-mono);
     background: var(--bg-black);
@@ -29,42 +25,209 @@ body {
     overflow: hidden;
 }
 
+/* =================================
+   DESKTOP LAYOUT
+   ================================= */
 .desktop-container {
     display: grid;
-    grid-template-columns: repeat(3, 120px);
-    grid-template-rows: repeat(3, 120px);
+    grid-template: repeat(3, 120px) / repeat(3, 120px);
     gap: 30px;
     padding: 30px;
     height: 100vh;
 }
 
-/* =================================
-   DESKTOP ICONS
-   ================================= */
 .desktop-icon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     width: 80px;
     height: 100px;
     text-align: center;
     cursor: pointer;
     user-select: none;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    border-radius: var(--border-radius);
+    transition: background 0.2s ease;
 }
 
 .desktop-icon:hover {
     background: var(--neon-green-glow);
-    border-radius: 5px;
 }
 
 .icon-symbol {
     font-size: 32px;
-    margin-bottom: 8px;
+    margin-bottom: var(--spacing);
     text-shadow: 0 0 10px var(--neon-green);
 }
 
 .icon-label {
     font-size: 12px;
     line-height: 1.2;
+}
+
+/* =================================
+   WINDOWS
+   ================================= */
+.window-frame {
+    background: rgba(0, 0, 0, 0.8); /* change final value for window opacity */
+    backdrop-filter: blur(1px); /* Window content blur: 1px, 2px, 4px */
+    border: 2px solid var(--neon-green);
+    border-radius: var(--border-radius);
+    box-shadow: 
+        0 0 20px var(--neon-green-dim),           /* Existing glow */
+        inset 3px 3px 0 rgba(0, 255, 65, 0.6),   /* bevel highlight, inset makes thicker and brighter */
+        inset -3px -3px 0 rgba(0, 0, 0, 0.8),    /* bevel shadow, thicker and darker */
+        0 0 0 2px rgba(0, 0, 0, 0.8);            /* Add black outline */
+    min-width: 300px;
+    min-height: 200px;
+}
+
+.window-titlebar {
+    background: linear-gradient(180deg, 
+        #33ff66 0%,                               /* Much brighter top */
+        #006622 100%);                            /* Much darker bottom */
+    color: var(--bg-black);
+    padding: var(--spacing) calc(var(--spacing) * 1.5);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: calc(var(--border-radius) - 2px) calc(var(--border-radius) - 2px) 0 0;
+    font-weight: bold;
+    font-size: 14px;
+    box-shadow: 
+        inset 0 2px 0 rgba(255, 255, 255, 0.4),  /* Thicker + brighter top */
+        inset 0 -2px 0 rgba(0, 0, 0, 0.6);       /* Thicker + darker bottom */
+    user-select: none;          /* Prevent text selection */
+    -webkit-user-select: none;
+}
+
+.window-content {
+    padding: calc(var(--spacing) * 2);
+}
+
+.window-controls {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+/* Shared button base styles */
+.window-minimize,
+.window-maximize,
+.window-close {
+    background: none;
+    border: none;
+    color: inherit;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 0;                /* Remove all padding */
+    margin: 0;                 /* Remove all margin */
+    border-radius: 3px;
+    transition: background 0.2s ease;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;            /* Force same line height */
+    vertical-align: baseline;  /* Force same baseline */
+}
+
+/* Make close button bigger */
+.window-close {
+    font-size: 36px;
+    transform: translateY(-3px);   /* Keep in place */
+
+}
+
+/* Shared hover effect */
+.window-minimize:hover,
+.window-maximize:hover,
+.window-close:hover {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+
+/* =================================
+   CRT EFFECTS
+   ================================= */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 255, 65, 0.12) 2px,
+        rgba(0, 255, 65, 0.12) 4px
+    );
+    pointer-events: none;
+    z-index: 1000;
+}
+
+
+/* =================================
+   FILE EXPLORER & PROGRAMS
+   ================================= */
+.file-explorer {
+    padding: 8px;
+}
+
+.file-item {
+    display: flex;
+    align-items: center;
+    padding: 4px 8px;
+    cursor: pointer;
+    border-radius: 3px;
+    margin-bottom: 2px;
+}
+
+.file-item:hover {
+    background: var(--neon-green-glow);
+}
+
+.file-icon {
+    margin-right: 8px;
+    font-size: 16px;
+}
+
+.file-name {
+    font-size: 14px;
+}
+
+/* Game interface styling */
+.game-interface {
+    padding: 16px;
+    text-align: center;
+}
+
+.game-preview {
+    font-size: 24px;
+    margin: 16px 0;
+    letter-spacing: 2px;
+}
+
+.game-controls {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+.game-btn {
+    background: var(--neon-green);
+    color: var(--bg-black);
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.game-btn:hover {
+    background: var(--neon-green-dim);
 }
