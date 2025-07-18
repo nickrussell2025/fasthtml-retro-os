@@ -9,8 +9,10 @@ from fasthtml.common import (
     serve,
 )
 
-from desktop.components import CreateContent, Desktop, DesktopIcon, Window
-from desktop.state import ICON_POSITIONS, window_manager
+from desktop.components import Desktop
+from desktop.services import desktop_service
+from desktop.state import window_manager, WINDOW_CONFIG
+
 
 # Application setup
 css_link = Link(rel="stylesheet", href="/static/css/style.css", type="text/css")
@@ -24,29 +26,31 @@ def static_file(fname: str, ext: str):
 
 @app.get("/")
 def home():
-    """Main desktop view"""
+    """Main desktop view - force fresh state"""
+    # Reset any stale window state
+    window_manager.windows.clear()
+    window_manager.open_folders.clear()
+    window_manager.minimized_positions.clear()
+    window_manager.available_positions = set(range(WINDOW_CONFIG['MAX_MINIMIZED']))
+    
     return Desktop()
 
 @app.post("/open")
 def open_item(name: str, type: str, icon_x: int, icon_y: int):
-    """Handle icon click to open window with icon state update"""
+    """Handle icon click - now uses service layer"""
     try:
-        # Create content and window
-        content = CreateContent(name, type)
-        window_data = window_manager.create_window(name, content, icon_x, icon_y)
-
-        if window_data is None:
-            return ""  # Window already exists
-
-        # Create window component
-        window = Window(window_data)
-
-        # For folders, also return updated icon via OOB
-        if type == "folder":
-            updated_icon = DesktopIcon(name, type, oob_update=True)
-            return window, updated_icon
-
+        window, icon_update = desktop_service.open_item(name, type, icon_x, icon_y)
+        
+        if window is None:
+            return ""
+        
+        if icon_update:
+            return window, icon_update
         return window
+
+    except Exception as e:
+        print(f"ERROR in open_item: {e}")
+        return Div(f"Error opening {name}: {str(e)}", cls="error-message")
 
     except Exception as e:
         print(f"ERROR in open_item: {e}")
@@ -54,81 +58,50 @@ def open_item(name: str, type: str, icon_x: int, icon_y: int):
 
 @app.post("/window/{window_id}/minimize")
 def minimize_window(window_id: str):
-    """Minimize window to taskbar"""
+    """Minimize window to taskbar - now uses service"""
     try:
-        position = window_manager.minimize_window(window_id)
-        window_data = window_manager.get_window(window_id)
-
-        if not window_data or position is None:
-            return ""
-
-        # Calculate taskbar position using configuration
-        left, bottom = window_manager.calculate_taskbar_position(position)
-
-        return Div(
-            Div(
-                Span("■", cls="minimized-icon"),
-                Span(window_data['name'], cls="minimized-title"),
-                Button("^", cls="restore-button",
-                       hx_post=f"/window/{window_id}/restore",
-                       hx_target=f"#{window_id}",
-                       hx_swap="outerHTML"),
-                cls="minimized-window"
-            ),
-            id=window_id,
-            cls="minimized-container",
-            style=f"position: absolute; left: {left}px; bottom: {bottom}px; z-index: 50;"
-        )
+        result = desktop_service.minimize_window(window_id)
+        return result if result else ""
     except Exception as e:
         print(f"ERROR in minimize_window: {e}")
         return ""
 
 @app.post("/window/{window_id}/maximize")
 def maximize_window(window_id: str):
-    """Maximize window to full screen"""
+    """Maximize window to full screen - now uses service"""
     try:
-        window_data = window_manager.maximize_window(window_id)
-        return Window(window_data, maximized=True) if window_data else ""
+        result = desktop_service.maximize_window(window_id)
+        return result if result else ""
     except Exception as e:
         print(f"ERROR in maximize_window: {e}")
         return ""
 
 @app.post("/window/{window_id}/restore")
 def restore_window(window_id: str):
-    """Restore window from minimized or maximized state"""
+    """Restore window from minimized or maximized state - now uses service"""
     try:
-        window_data = window_manager.restore_window(window_id)
-        return Window(window_data) if window_data else ""
+        result = desktop_service.restore_window(window_id)
+        return result if result else ""
     except Exception as e:
         print(f"ERROR in restore_window: {e}")
         return ""
 
 @app.delete("/window/{window_id}")
 def close_window(window_id: str):
-    """Close window and clean up state with icon update"""
+    """Close window and clean up state - now uses service"""
     try:
-        # Clean up window state
-        closed_window_data = window_manager.close_window(window_id)
-
-        # If folder was closed, return updated icon via OOB
-        if (closed_window_data and
-            closed_window_data.get('item_type') == 'folder' and
-            closed_window_data['name'] in ICON_POSITIONS):
-
-            return DesktopIcon(closed_window_data['name'], 'folder', oob_update=True)
-
-        return ""
-
+        icon_update = desktop_service.close_window(window_id)
+        return icon_update if icon_update else ""
     except Exception as e:
         print(f"ERROR in close_window: {e}")
         return ""
 
 @app.post("/window/{window_id}/move")
 def move_window(window_id: str, x: int, y: int):
-    """Update window position (called by JavaScript drag handler)"""
+    """Update window position - now uses service"""
     try:
-        window_manager.update_window_position(window_id, x, y)
-        return ""
+        success = desktop_service.move_window(window_id, x, y)
+        return "" if success else "Error"
     except Exception as e:
         print(f"ERROR in move_window: {e}")
         return ""

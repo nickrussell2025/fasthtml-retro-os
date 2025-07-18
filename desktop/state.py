@@ -40,6 +40,8 @@ class WindowManager:
         self.available_positions = set(range(WINDOW_CONFIG['MAX_MINIMIZED']))
         self.next_z_index = WINDOW_CONFIG['INITIAL_Z_INDEX']
         self.open_folders = set()
+        self._reset_desktop()
+
 
     def create_window(self, name, content, icon_x, icon_y):
         """Creates a window and returns the complete window data structure"""
@@ -141,6 +143,15 @@ class WindowManager:
             TASKBAR_CONFIG['LEFT_MARGIN'],
             TASKBAR_CONFIG['BOTTOM_MARGIN'] + (position * TASKBAR_CONFIG['ITEM_HEIGHT'])
         )
+        
+    def _reset_desktop(self):
+        """Reset all desktop state on startup"""
+        self.windows.clear()
+        self.minimized_positions.clear()
+        self.available_positions = set(range(WINDOW_CONFIG['MAX_MINIMIZED']))
+        self.next_z_index = WINDOW_CONFIG['INITIAL_Z_INDEX']
+        self.open_folders.clear()
+        print("Desktop state reset - all windows closed")
 
 # Global state instance
 window_manager = WindowManager()

@@ -46,3 +46,11 @@ function stopDrag() {
     document.removeEventListener('mousemove', handleDrag);
     document.removeEventListener('mouseup', stopDrag);
 }
+
+// // Window focus - bring clicked window to front
+// document.addEventListener('click', function(e) {
+//     const window = e.target.closest('.window-frame');
+//     if (window && !e.target.closest('.window-titlebar')) {
+//         window.style.zIndex = (Date.now() % 100000);
+//     }
+// });
