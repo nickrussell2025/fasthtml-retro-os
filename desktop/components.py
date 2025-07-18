@@ -45,6 +45,7 @@ def Window(window_data, maximized=False):
         ),
         # Window content area
         Div(window_data['content'], cls="window-content"),
+        Div(cls="resize-handle"),
         cls="window-frame",
         id=window_id,
         style=style

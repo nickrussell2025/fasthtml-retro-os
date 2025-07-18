@@ -30,33 +30,30 @@ class DesktopService:
     
     
     def minimize_window(self, window_id: str):
-        """Move minimize logic to service layer"""
+        """Optimized minimize - style-only update"""
         position = self.window_manager.minimize_window(window_id)
         window_data = self.window_manager.get_window(window_id)
 
         if not window_data or position is None:
             return None
 
-        # Calculate taskbar position using configuration
+        # Calculate taskbar position
         left, bottom = self.window_manager.calculate_taskbar_position(position)
-
-        # Return the exact same Div structure as before
-        from fasthtml.common import Div, Span, Button
         
-        return Div(
-            Div(
-                Span("■", cls="minimized-icon"),
-                Span(window_data['name'], cls="minimized-title"),
-                Button("^", cls="restore-button",
-                    hx_post=f"/window/{window_id}/restore",
-                    hx_target=f"#{window_id}",
-                    hx_swap="outerHTML"),
-                cls="minimized-window"
-            ),
-            id=window_id,
-            cls="minimized-container",
-            style=f"position: absolute; left: {left}px; bottom: {bottom}px; z-index: 50;"
-        )
+        # Return minimal HTML string instead of full component
+        return f'''<div id="{window_id}" hx-swap-oob="true" 
+                        class="minimized-container"
+                        style="position: absolute; left: {left}px; bottom: {bottom}px; 
+                            z-index: 50; width: 200px; height: 30px;">
+                    <div class="minimized-window">
+                    <span class="minimized-icon">■</span>
+                    <span class="minimized-title">{window_data['name']}</span>
+                    <button class="restore-button" 
+                            hx-post="/window/{window_id}/restore"
+                            hx-target="#{window_id}" 
+                            hx-swap="outerHTML">^</button>
+                    </div>
+                </div>'''
 
     def restore_window(self, window_id: str):
         """Move restore logic to service layer"""

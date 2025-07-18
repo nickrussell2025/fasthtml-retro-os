@@ -69,17 +69,19 @@ body {
    WINDOWS
    ================================= */
 .window-frame {
-    background: rgba(0, 0, 0, 0.8); /* change final value for window opacity */
-    backdrop-filter: blur(1px); /* Window content blur: 1px, 2px, 4px */
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(1px);
     border: 2px solid var(--neon-green);
     border-radius: var(--border-radius);
     box-shadow: 
-        0 0 20px var(--neon-green-dim),           /* Existing glow */
-        inset 3px 3px 0 rgba(0, 255, 65, 0.6),   /* bevel highlight, inset makes thicker and brighter */
-        inset -3px -3px 0 rgba(0, 0, 0, 0.8),    /* bevel shadow, thicker and darker */
-        0 0 0 2px rgba(0, 0, 0, 0.8);            /* Add black outline */
+        0 0 20px var(--neon-green-dim),
+        inset 3px 3px 0 rgba(0, 255, 65, 0.6),
+        inset -3px -3px 0 rgba(0, 0, 0, 0.8),
+        0 0 0 2px rgba(0, 0, 0, 0.8);
     min-width: 300px;
     min-height: 200px;
+    resize: both;
+    overflow: hidden;
 }
 
 .window-titlebar {
@@ -103,6 +105,10 @@ body {
 
 .window-content {
     padding: calc(var(--spacing) * 2);
+    height: calc(100% - 50px);
+    overflow-y: auto;
+    /* border: 1px solid rgba(0, 255, 65, 0.2); */
+    background: rgba(0, 0, 0, 0.1);
 }
 
 .window-controls {
@@ -230,4 +236,74 @@ body::before {
 
 .game-btn:hover {
     background: var(--neon-green-dim);
+}
+
+/* Window state classes for optimization */
+.window-maximized {
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 999 !important;
+}
+
+.window-normal {
+    position: absolute;
+    /* Other properties handled by inline styles */
+}
+
+/* =================================
+   RETRO SCROLLBARS
+   ================================= */
+.window-content::-webkit-scrollbar {
+    width: 16px;
+    background: var(--bg-black);
+}
+
+.window-content::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.8);
+    border: 1px solid var(--neon-green);
+    border-radius: 0;
+}
+
+.window-content::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, 
+        var(--neon-green) 0%,
+        #006622 100%);
+    border: 1px solid var(--neon-green);
+    border-radius: 0;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.window-content::-webkit-scrollbar-thumb:hover {
+    background: var(--neon-green);
+    box-shadow: 
+        inset 0 1px 0 rgba(255, 255, 255, 0.4),
+        0 0 8px var(--neon-green-dim);
+}
+
+.window-content::-webkit-scrollbar-corner {
+    background: var(--bg-black);
+}
+
+/* =================================
+   WINDOW RESIZE
+   ================================= */
+/* Retro resize handle */
+.window-frame::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 12px;
+    height: 12px;
+    background: linear-gradient(-45deg, 
+        transparent 30%, 
+        var(--neon-green) 35%, 
+        transparent 40%,
+        transparent 60%,
+        var(--neon-green) 65%,
+        transparent 70%);
+    pointer-events: none;
 }

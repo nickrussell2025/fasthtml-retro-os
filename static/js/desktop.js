@@ -47,10 +47,13 @@ function stopDrag() {
     document.removeEventListener('mouseup', stopDrag);
 }
 
-// // Window focus - bring clicked window to front
-// document.addEventListener('click', function(e) {
-//     const window = e.target.closest('.window-frame');
-//     if (window && !e.target.closest('.window-titlebar')) {
-//         window.style.zIndex = (Date.now() % 100000);
-//     }
-// });
+// Window focus - bring clicked window to front
+document.addEventListener('click', function(e) {
+    const windowElement = e.target.closest('.window-frame');
+    
+    // Focus on any click in window (content OR titlebar)
+    // But skip if clicking actual buttons
+    if (windowElement && !e.target.matches('button')) {
+        windowElement.style.zIndex = (Date.now() % 100000);
+    }
+});

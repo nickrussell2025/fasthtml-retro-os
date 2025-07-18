@@ -11,7 +11,13 @@ ICON_POSITIONS = {
 }
 
 FOLDER_CONTENTS = {
-    "Documents": ["📄 resume.txt", "📄 notes.txt", "📁 projects/"],
+    "Documents": [
+        "📄 resume.txt", "📄 notes.txt", "📁 projects/",
+        "📄 report.docx", "📄 invoice.pdf", "📄 contract.txt",
+        "📁 photos/", "📁 backups/", "📄 todo.md",
+        "📄 budget.xlsx", "📄 letter.doc", "📁 archive/",
+        "📄 presentation.pptx", "📄 manual.pdf"
+    ],
     "Programs": ["🎮 Game of Life", "🧮 Calculator", "📝 Text Editor"]
 }
 

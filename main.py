@@ -19,10 +19,10 @@ css_link = Link(rel="stylesheet", href="/static/css/style.css", type="text/css")
 js_script = Script(src="/static/js/desktop.js")
 app = FastHTML(hdrs=(css_link, js_script))
 
-@app.get("/{fname:path}.{ext:static}")
-def static_file(fname: str, ext: str):
-    """Serve static files (CSS, JS, images)"""
-    return FileResponse(f'{fname}.{ext}')
+# @app.get("/{fname:path}.{ext:static}")
+# def static_file(fname: str, ext: str):
+#     """Serve static files (CSS, JS, images)"""
+#     return FileResponse(f'{fname}.{ext}')
 
 @app.get("/")
 def home():
@@ -105,6 +105,20 @@ def move_window(window_id: str, x: int, y: int):
     except Exception as e:
         print(f"ERROR in move_window: {e}")
         return ""
+    
+@app.get("/favicon.ico")
+def favicon():
+    import os
+    print("Favicon requested!")
+    print("File exists:", os.path.exists("static/favicon.ico"))
+    if os.path.exists("static/favicon.ico"):
+        return FileResponse("static/favicon.ico")
+    else:
+        return "FAVICON FILE NOT FOUND"
 
+@app.get("/static/{filepath:path}")
+def static_files(filepath: str):
+    return FileResponse(f"static/{filepath}")
+    
 if __name__ == "__main__":
     serve()
