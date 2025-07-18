@@ -307,3 +307,69 @@ body::before {
         transparent 70%);
     pointer-events: none;
 }
+
+/* =================================
+   MOBILE OPTIMIZATION
+   ================================= */
+@media (max-width: 768px) {
+    .desktop-container {
+        grid-template-columns: 1fr 1fr !important;
+        grid-template-rows: repeat(6, 100px) !important;
+        gap: 15px !important;
+        padding: 15px !important;
+    }
+    
+    .desktop-icon {
+        width: 90px !important;
+        height: 110px !important;
+    }
+    
+    /* MOBILE WINDOWS - FULLSCREEN */
+    .window-frame {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        z-index: 100 !important;
+        resize: none !important; /* Disable resize on mobile */
+    }
+    
+    .window-titlebar {
+        height: 50px !important;
+        padding: 12px !important;
+    }
+    
+    .window-controls button {
+        min-width: 44px !important;
+        min-height: 44px !important;
+    }
+    
+    .window-content {
+        height: calc(100vh - 50px) !important;
+    }
+}
+
+
+/* =================================
+   SVG ICONS - NEON GREEN
+   ================================= */
+.icon-svg {
+    width: 40px;
+    height: 40px;
+    /* Convert black SVG to neon green + add glow */
+    filter: brightness(0) saturate(100%) invert(64%) sepia(78%) saturate(3151%) hue-rotate(95deg) brightness(104%) contrast(101%) drop-shadow(0 0 8px var(--neon-green-dim));
+}
+
+/* Mobile - bigger icons */
+@media (max-width: 768px) {
+    .icon-svg {
+        width: 48px;
+        height: 48px;
+    }
+}
+
+/* Hover effect */
+.desktop-icon:hover .icon-svg {
+    filter: brightness(0) saturate(100%) invert(64%) sepia(78%) saturate(3151%) hue-rotate(95deg) brightness(120%) contrast(110%) drop-shadow(0 0 12px var(--neon-green));
+}

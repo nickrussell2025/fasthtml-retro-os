@@ -100,14 +100,24 @@ def DesktopIcon(name, item_type, oob_update=False):
     x, y = ICON_POSITIONS[name]
 
     # Determine icon based on type and current state
+    # if item_type == "folder" and window_manager.is_folder_open(name):
+    #     icon = "🗁"  # Open folder
+    # elif item_type == "folder":
+    #     icon = "🗀"  # Closed folder
+    # elif item_type == "program":
+    #     icon = "⚏"   # Program icon
+    # else:
+    #     icon = "🗎"   # Default file icon
+
+    # Determine icon based on type and current state
     if item_type == "folder" and window_manager.is_folder_open(name):
-        icon = "🗁"  # Open folder
+        icon = NotStr('<img src="/static/icons/folder-open.svg" alt="Open Folder" class="icon-svg">')
     elif item_type == "folder":
-        icon = "🗀"  # Closed folder
+        icon = NotStr('<img src="/static/icons/folder.svg" alt="Folder" class="icon-svg">')
     elif item_type == "program":
-        icon = "⚏"   # Program icon
+        icon = NotStr('<img src="/static/icons/gamepad.svg" alt="Program" class="icon-svg">')
     else:
-        icon = "🗎"   # Default file icon
+        icon = NotStr('<img src="/static/icons/folder.svg" alt="File" class="icon-svg">')
 
     # Create unique ID for this icon
     icon_id = f"icon-{name.replace(' ', '-').lower()}"

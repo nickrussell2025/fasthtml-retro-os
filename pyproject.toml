@@ -8,6 +8,7 @@ dependencies = [
     "fastlite>=0.2.1",
     "pydantic>=2.11.7",
     "python-fasthtml>=0.12.21",
+    "railway>=0.0.4",
     "ruff>=0.12.3",
 ]
 
