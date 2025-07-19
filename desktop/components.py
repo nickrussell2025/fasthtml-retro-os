@@ -7,6 +7,21 @@ from fasthtml.common import *
 from desktop.state import FOLDER_CONTENTS, ICON_POSITIONS, window_manager
 
 
+def WindowIcon(icon_type: str, size: int = 16):
+    """Create SVG icons for window controls and taskbar using existing icon files"""
+    icon_paths = {
+        'minimize': '/static/icons/circle-chevron-down.svg',
+        'maximize': '/static/icons/circle-chevron-up.svg', 
+        'close': '/static/icons/circle-x.svg',
+        'restore': '/static/icons/circle-chevron-up.svg',
+        'window': '/static/icons/folder.svg'
+    }
+    
+    icon_path = icon_paths.get(icon_type, icon_paths['window'])
+    
+    return NotStr(f'<img src="{icon_path}" alt="{icon_type}" class="window-control-svg" style="width: {size}px; height: {size}px;">')
+
+
 def Window(window_data, maximized=False):
     """Render window from standardized window data structure"""
     if not window_data:
@@ -27,18 +42,18 @@ def Window(window_data, maximized=False):
         Div(
             Span(window_data['name'], cls="window-title"),
             Div(
-                Button("▼", cls="window-minimize",
-                       hx_post=f"/window/{window_id}/minimize",
-                       hx_target=f"#{window_id}",
-                       hx_swap="outerHTML"),
-                Button("▲", cls="window-maximize",
-                       hx_post=f"/window/{window_id}/maximize",
-                       hx_target=f"#{window_id}",
-                       hx_swap="outerHTML"),
-                Button("■", cls="window-close",
-                       hx_delete=f"/window/{window_id}",
-                       hx_target=f"#{window_id}",
-                       hx_swap="outerHTML"),
+                Button(WindowIcon("minimize", 16), cls="window-minimize",
+                    hx_post=f"/window/{window_id}/minimize",
+                    hx_target=f"#{window_id}",
+                    hx_swap="outerHTML"),
+                Button(WindowIcon("maximize", 16), cls="window-maximize",
+                    hx_post=f"/window/{window_id}/maximize",
+                    hx_target=f"#{window_id}",
+                    hx_swap="outerHTML"),
+                Button(WindowIcon("close", 16), cls="window-close",
+                    hx_delete=f"/window/{window_id}",
+                    hx_target=f"#{window_id}",
+                    hx_swap="outerHTML"),
                 cls="window-controls"
             ),
             cls="window-titlebar"
@@ -151,19 +166,19 @@ def Desktop():
         cls="desktop-container",
         id="desktop"
     )
-    
+
 def SystemSettings():
     """System settings panel with theme controls"""
     return Div(
         H3("⚙️ System Settings"),
-        
+
         # Theme Color Selection
         Div(
             Label("Theme Color"),
             Select(
                 Option("Matrix Green", value="green", selected=True),
                 Option("Cyber Cyan", value="cyan"),
-                Option("Terminal Amber", value="amber"), 
+                Option("Terminal Amber", value="amber"),
                 Option("Neon Purple", value="purple"),
                 name="theme_color",
                 hx_post="/settings/theme",
@@ -172,7 +187,7 @@ def SystemSettings():
             ),
             cls="setting-group"
         ),
-        
+
         # Font Selection
         Div(
             Label("System Font"),
@@ -187,12 +202,12 @@ def SystemSettings():
             ),
             cls="setting-group"
         ),
-        
+
         # Scanline Intensity
         Div(
             Label("Scanline Intensity"),
             Input(
-                type="range", 
+                type="range",
                 min="0", max="0.3", step="0.02", value="0.12",
                 name="scanline_intensity",
                 hx_post="/settings/scanlines",
@@ -202,6 +217,6 @@ def SystemSettings():
             ),
             cls="setting-group"
         ),
-        
+
         cls="system-settings"
     )

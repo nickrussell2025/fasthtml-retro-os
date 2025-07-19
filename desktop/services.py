@@ -2,15 +2,16 @@
 Desktop Services - Incremental Migration
 Start by wrapping existing logic without changing it
 """
-from fasthtml.common import Script, Div, Style
-from desktop.components import CreateContent, Window, DesktopIcon
-from desktop.state import window_manager, ICON_POSITIONS, THEME_COLORS, SYSTEM_FONTS
+from fasthtml.common import Style
+
+from desktop.components import CreateContent, DesktopIcon, Window
+from desktop.state import ICON_POSITIONS, SYSTEM_FONTS, window_manager
 
 
 class DesktopService:
     def __init__(self):
         self.window_manager = window_manager
-    
+
     def open_item(self, name: str, type: str, icon_x: int, icon_y: int):
         """Wrapper around existing open logic - no changes yet"""
         # Copy exact logic from main.py open_item
@@ -28,8 +29,8 @@ class DesktopService:
             return window, updated_icon
 
         return window, None
-    
-    
+
+
     def minimize_window(self, window_id: str):
         """Optimized minimize - style-only update"""
         position = self.window_manager.minimize_window(window_id)
@@ -40,7 +41,7 @@ class DesktopService:
 
         # Calculate taskbar position
         left, bottom = self.window_manager.calculate_taskbar_position(position)
-        
+
         # Return minimal HTML string instead of full component
         return f'''<div id="{window_id}" hx-swap-oob="true" 
                         class="minimized-container"
@@ -59,21 +60,21 @@ class DesktopService:
     def restore_window(self, window_id: str):
         """Move restore logic to service layer"""
         window_data = self.window_manager.restore_window(window_id)
-        
+
         if not window_data:
             return None
-        
+
         return Window(window_data)
-    
+
     def maximize_window(self, window_id: str):
         """Move maximize logic to service layer"""
         window_data = self.window_manager.maximize_window(window_id)
-        
+
         if not window_data:
             return None
-        
+
         return Window(window_data, maximized=True)
-    
+
     def close_window(self, window_id: str):
         """Move close logic to service layer"""
         # Clean up window state
@@ -87,16 +88,16 @@ class DesktopService:
             return DesktopIcon(closed_window_data['name'], 'folder', oob_update=True)
 
         return None
-    
+
     def move_window(self, window_id: str, x: int, y: int):
         """Move window position logic to service layer"""
         success = self.window_manager.update_window_position(window_id, x, y)
         return success
-    
+
     def update_theme(self, theme_color: str):
         hue_map = {"green": 120, "cyan": 180, "amber": 45, "purple": 270}
         hue = hue_map[theme_color]
-        
+
         return Style(f"""
             :root {{ --primary-hue: {hue} !important; }}
         """)

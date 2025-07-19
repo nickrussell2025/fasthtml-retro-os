@@ -51,9 +51,14 @@ function stopDrag() {
 document.addEventListener('click', function(e) {
     const windowElement = e.target.closest('.window-frame');
     
-    // Focus on any click in window (content OR titlebar)
-    // But skip if clicking actual buttons
     if (windowElement && !e.target.matches('button')) {
-        windowElement.style.zIndex = (Date.now() % 100000);
+        // Find highest current z-index and add 1
+        const allWindows = document.querySelectorAll('.window-frame');
+        let maxZ = 100;
+        allWindows.forEach(win => {
+            const z = parseInt(win.style.zIndex) || 100;
+            if (z > maxZ) maxZ = z;
+        });
+        windowElement.style.zIndex = maxZ + 1;
     }
 });

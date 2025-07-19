@@ -1,18 +1,15 @@
 from fasthtml.common import (
-    Button,
     Div,
     FastHTML,
     FileResponse,
     Link,
     Script,
-    Span,
     serve,
 )
 
 from desktop.components import Desktop
 from desktop.services import desktop_service
-from desktop.state import window_manager, WINDOW_CONFIG
-
+from desktop.state import WINDOW_CONFIG, window_manager
 
 # Application setup
 css_link = Link(rel="stylesheet", href="/static/css/style.css", type="text/css")
@@ -28,7 +25,7 @@ def home():
     window_manager.open_folders.clear()
     window_manager.minimized_positions.clear()
     window_manager.available_positions = set(range(WINDOW_CONFIG['MAX_MINIMIZED']))
-    
+
     return Desktop()
 
 @app.post("/open")
@@ -36,10 +33,10 @@ def open_item(name: str, type: str, icon_x: int, icon_y: int):
     """Handle icon click - now uses service layer"""
     try:
         window, icon_update = desktop_service.open_item(name, type, icon_x, icon_y)
-        
+
         if window is None:
             return ""
-        
+
         if icon_update:
             return window, icon_update
         return window
@@ -101,7 +98,7 @@ def move_window(window_id: str, x: int, y: int):
     except Exception as e:
         print(f"ERROR in move_window: {e}")
         return ""
-    
+
 @app.get("/favicon.ico")
 def favicon():
     import os
@@ -120,13 +117,13 @@ def static_files(filepath: str):
 def update_theme(theme_color: str):
     return desktop_service.update_theme(theme_color)
 
-@app.post("/settings/font")  
+@app.post("/settings/font")
 def update_font(font: str):
     return desktop_service.update_font(font)
 
 @app.post("/settings/scanlines")
 def update_scanlines(scanline_intensity: float):
     return desktop_service.update_scanlines(scanline_intensity)
-    
+
 if __name__ == "__main__":
     serve()

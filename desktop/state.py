@@ -25,14 +25,14 @@ FOLDER_CONTENTS = {
 THEME_COLORS = {
     "green": {
         "primary": "#00ff41",
-        "primary_dim": "#00ff4155", 
+        "primary_dim": "#00ff4155",
         "primary_glow": "#00ff4108",
         "primary_dark": "#008822"
     },
     "cyan": {
         "primary": "#00ffff",
         "primary_dim": "#00ffff55",
-        "primary_glow": "#00ffff08", 
+        "primary_glow": "#00ffff08",
         "primary_dark": "#008888"
     },
     "amber": {
@@ -42,7 +42,7 @@ THEME_COLORS = {
         "primary_dark": "#cc8800"
     },
     "purple": {
-        "primary": "#8a2be2", 
+        "primary": "#8a2be2",
         "primary_dim": "#8a2be255",
         "primary_glow": "#8a2be208",
         "primary_dark": "#5a1b92"
@@ -51,7 +51,7 @@ THEME_COLORS = {
 
 SYSTEM_FONTS = {
     "courier": "'Courier New', monospace",
-    "monaco": "'Monaco', monospace", 
+    "monaco": "'Monaco', monospace",
     "consolas": "'Consolas', monospace"
 }
 
@@ -184,7 +184,7 @@ class WindowManager:
             TASKBAR_CONFIG['LEFT_MARGIN'],
             TASKBAR_CONFIG['BOTTOM_MARGIN'] + (position * TASKBAR_CONFIG['ITEM_HEIGHT'])
         )
-        
+
     def _reset_desktop(self):
         """Reset all desktop state on startup"""
         self.windows.clear()
