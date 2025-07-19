@@ -4,8 +4,18 @@ Start by wrapping existing logic without changing it
 """
 from fasthtml.common import Style
 
-from desktop.components import CreateContent, DesktopIcon, Window
+from desktop.components import CreateContent, DesktopIcon, Window, WindowIcon
 from desktop.state import ICON_POSITIONS, SYSTEM_FONTS, window_manager
+
+
+def get_window_icon_html(icon_type="window", size=16):
+    """Generate HTML string for window icons - efficient for f-string usage"""
+    icon_paths = {
+        "window": "/static/icons/folder.svg",
+        "restore": "/static/icons/circle-chevron-up.svg"
+    }
+    icon_path = icon_paths.get(icon_type, icon_paths["window"])
+    return f'<img src="{icon_path}" alt="{icon_type}" class="window-control-svg" style="width: {size}px; height: {size}px;">'
 
 
 class DesktopService:
@@ -48,12 +58,12 @@ class DesktopService:
                         style="position: absolute; left: {left}px; bottom: {bottom}px; 
                             z-index: 50; width: 200px; height: 30px;">
                     <div class="minimized-window">
-                    <span class="minimized-icon">■</span>
+                    <span class="minimized-icon">{get_window_icon_html("window", 16)}</span>
                     <span class="minimized-title">{window_data['name']}</span>
                     <button class="restore-button" 
                             hx-post="/window/{window_id}/restore"
                             hx-target="#{window_id}" 
-                            hx-swap="outerHTML">^</button>
+                            hx-swap="outerHTML">{get_window_icon_html("restore", 12)}</button>
                     </div>
                 </div>'''
 
