@@ -8,6 +8,7 @@ ICON_POSITIONS = {
     'Documents': (1, 1),
     'Programs': (2, 1),
     'Game of Life': (1, 2),
+    'Settings': (3, 3),
 }
 
 FOLDER_CONTENTS = {
@@ -20,6 +21,40 @@ FOLDER_CONTENTS = {
     ],
     "Programs": ["🎮 Game of Life", "🧮 Calculator", "📝 Text Editor"]
 }
+
+THEME_COLORS = {
+    "green": {
+        "primary": "#00ff41",
+        "primary_dim": "#00ff4155", 
+        "primary_glow": "#00ff4108",
+        "primary_dark": "#008822"
+    },
+    "cyan": {
+        "primary": "#00ffff",
+        "primary_dim": "#00ffff55",
+        "primary_glow": "#00ffff08", 
+        "primary_dark": "#008888"
+    },
+    "amber": {
+        "primary": "#ffbf00",
+        "primary_dim": "#ffbf0055",
+        "primary_glow": "#ffbf0008",
+        "primary_dark": "#cc8800"
+    },
+    "purple": {
+        "primary": "#8a2be2", 
+        "primary_dim": "#8a2be255",
+        "primary_glow": "#8a2be208",
+        "primary_dark": "#5a1b92"
+    }
+}
+
+SYSTEM_FONTS = {
+    "courier": "'Courier New', monospace",
+    "monaco": "'Monaco', monospace", 
+    "consolas": "'Consolas', monospace"
+}
+
 
 # Window positioning configuration
 WINDOW_CONFIG = {

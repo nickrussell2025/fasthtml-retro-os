@@ -2,11 +2,19 @@
    VARIABLES & RESET
    ================================= */
 :root {
-    --neon-green: #00ff41;
-    --neon-green-dim: #00ff4155;
-    --neon-green-glow: #00ff4108;
+    /* Theme Colors - Dynamic */
+    --primary-hue: 120;  /* Green=120, Cyan=180, Amber=45, Purple=270 */
+    --neon-green: hsl(var(--primary-hue), 100%, 50%);
+    --neon-green-dim: hsl(var(--primary-hue), 100%, 50%, 0.33);
+    --neon-green-glow: hsl(var(--primary-hue), 100%, 50%, var(--scanline-opacity));
+    
+    /* Settings Variables */
+    --scanline-opacity: 0.12;
+    --window-transparency: 0.8;
+    --system-font: 'Courier New', monospace;
+    
+    /* Keep existing variables */
     --bg-black: #000;
-    --font-mono: 'Courier New', monospace;
     --border-radius: 5px;
     --spacing: 8px;
 }
@@ -18,7 +26,7 @@
 }
 
 body {
-    font-family: var(--font-mono);
+    font-family: var(--system-font);  /* Changed this line */
     background: var(--bg-black);
     color: var(--neon-green);
     height: 100vh;
@@ -158,7 +166,7 @@ body {
 /* =================================
    CRT EFFECTS
    ================================= */
-body::before {
+/* body::before {
     content: '';
     position: fixed;
     top: 0;
@@ -172,6 +180,25 @@ body::before {
         rgba(0, 255, 65, 0.12) 2px,
         rgba(0, 255, 65, 0.12) 4px
     );
+    pointer-events: none;
+    z-index: 1000;
+} */
+
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: linear-gradient(
+        0deg, 
+        transparent 0%, 
+        transparent 50%, 
+        var(--neon-green-glow) 50%, 
+        var(--neon-green-glow) 100%
+    );
+    background-size: 100% 3px;
     pointer-events: none;
     z-index: 1000;
 }
@@ -372,4 +399,50 @@ body::before {
 /* Hover effect */
 .desktop-icon:hover .icon-svg {
     filter: brightness(0) saturate(100%) invert(64%) sepia(78%) saturate(3151%) hue-rotate(95deg) brightness(120%) contrast(110%) drop-shadow(0 0 12px var(--neon-green));
+}
+
+
+/* =================================
+   SYSTEM SETTINGS
+   ================================= */
+/* System Settings Styles */
+.system-settings {
+    padding: 16px;
+}
+
+.setting-group {
+    margin-bottom: 16px;
+}
+
+.setting-group label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 14px;
+    color: var(--neon-green);
+}
+
+.setting-group select,
+.setting-group input[type="range"] {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    border: 1px solid var(--neon-green);
+    color: var(--neon-green);
+    padding: 4px 8px;
+    border-radius: 3px;
+}
+
+.setting-group select:focus,
+.setting-group input[type="range"]:focus {
+    outline: none;
+    box-shadow: 0 0 5px var(--neon-green-dim);
+}
+
+/* Themed slider */
+input[type="range"] {
+    accent-color: var(--neon-green);
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    background: var(--neon-green);
+    box-shadow: 0 0 8px var(--neon-green-dim);
 }

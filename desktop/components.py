@@ -75,6 +75,8 @@ def CreateContent(name, item_type):
                 P("Click cells to toggle. Watch patterns evolve!"),
                 cls="game-interface"
             )
+        elif name == "Settings":
+            return SystemSettings()
         else:
             return Div(
                 H3(f"{name}"),
@@ -100,20 +102,12 @@ def DesktopIcon(name, item_type, oob_update=False):
     x, y = ICON_POSITIONS[name]
 
     # Determine icon based on type and current state
-    # if item_type == "folder" and window_manager.is_folder_open(name):
-    #     icon = "🗁"  # Open folder
-    # elif item_type == "folder":
-    #     icon = "🗀"  # Closed folder
-    # elif item_type == "program":
-    #     icon = "⚏"   # Program icon
-    # else:
-    #     icon = "🗎"   # Default file icon
-
-    # Determine icon based on type and current state
     if item_type == "folder" and window_manager.is_folder_open(name):
         icon = NotStr('<img src="/static/icons/folder-open.svg" alt="Open Folder" class="icon-svg">')
     elif item_type == "folder":
         icon = NotStr('<img src="/static/icons/folder.svg" alt="Folder" class="icon-svg">')
+    elif item_type == "program" and name == "Settings":
+        icon = NotStr('<img src="/static/icons/settings.svg" alt="Settings" class="icon-svg">')
     elif item_type == "program":
         icon = NotStr('<img src="/static/icons/gamepad.svg" alt="Program" class="icon-svg">')
     else:
@@ -148,10 +142,66 @@ def DesktopIcon(name, item_type, oob_update=False):
 
 def Desktop():
     """Create the main desktop layout with icons"""
+    print(f"🔍 DEBUG: Available icons: {list(ICON_POSITIONS.keys())}")
+
     return Div(
         # Generate desktop icons from position registry
         *[DesktopIcon(name, "folder" if name in ["Documents", "Programs"] else "program")
           for name in ICON_POSITIONS.keys()],
         cls="desktop-container",
         id="desktop"
+    )
+    
+def SystemSettings():
+    """System settings panel with theme controls"""
+    return Div(
+        H3("⚙️ System Settings"),
+        
+        # Theme Color Selection
+        Div(
+            Label("Theme Color"),
+            Select(
+                Option("Matrix Green", value="green", selected=True),
+                Option("Cyber Cyan", value="cyan"),
+                Option("Terminal Amber", value="amber"), 
+                Option("Neon Purple", value="purple"),
+                name="theme_color",
+                hx_post="/settings/theme",
+                hx_target="head",
+                hx_swap="beforeend"
+            ),
+            cls="setting-group"
+        ),
+        
+        # Font Selection
+        Div(
+            Label("System Font"),
+            Select(
+                Option("Courier New", value="courier", selected=True),
+                Option("Monaco", value="monaco"),
+                Option("Consolas", value="consolas"),
+                name="font",
+                hx_post="/settings/font",
+                hx_target="head",
+                hx_swap="beforeend"
+            ),
+            cls="setting-group"
+        ),
+        
+        # Scanline Intensity
+        Div(
+            Label("Scanline Intensity"),
+            Input(
+                type="range", 
+                min="0", max="0.3", step="0.02", value="0.12",
+                name="scanline_intensity",
+                hx_post="/settings/scanlines",
+                hx_trigger="input",
+                hx_target="head",
+                hx_swap="beforeend"
+            ),
+            cls="setting-group"
+        ),
+        
+        cls="system-settings"
     )

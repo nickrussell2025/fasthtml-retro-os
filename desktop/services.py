@@ -2,8 +2,9 @@
 Desktop Services - Incremental Migration
 Start by wrapping existing logic without changing it
 """
+from fasthtml.common import Script, Div, Style
 from desktop.components import CreateContent, Window, DesktopIcon
-from desktop.state import window_manager, ICON_POSITIONS
+from desktop.state import window_manager, ICON_POSITIONS, THEME_COLORS, SYSTEM_FONTS
 
 
 class DesktopService:
@@ -91,6 +92,25 @@ class DesktopService:
         """Move window position logic to service layer"""
         success = self.window_manager.update_window_position(window_id, x, y)
         return success
+    
+    def update_theme(self, theme_color: str):
+        hue_map = {"green": 120, "cyan": 180, "amber": 45, "purple": 270}
+        hue = hue_map[theme_color]
+        
+        return Style(f"""
+            :root {{ --primary-hue: {hue} !important; }}
+        """)
+
+    def update_font(self, font: str):
+        font_family = SYSTEM_FONTS[font]
+        return Style(f"""
+            :root {{ --system-font: {font_family} !important; }}
+        """)
+
+    def update_scanlines(self, scanline_intensity: float):
+        return Style(f"""
+            :root {{ --scanline-opacity: {scanline_intensity} !important; }}
+        """)
 
 # Global instance
 desktop_service = DesktopService()
