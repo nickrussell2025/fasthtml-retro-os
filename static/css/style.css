@@ -4,9 +4,11 @@
 :root {
     /* Theme Colors - Dynamic */
     --primary-hue: 120;  /* Green=120, Cyan=180, Amber=45, Purple=270 */
-    --neon-green: hsl(var(--primary-hue), 100%, 50%);
-    --neon-green-dim: hsl(var(--primary-hue), 100%, 50%, 0.33);
-    --neon-green-glow: hsl(var(--primary-hue), 100%, 50%, var(--scanline-opacity));
+    --primary-color: hsl(var(--primary-hue), 100%, 50%);
+    --primary-glow: hsl(var(--primary-hue), 100%, 50%, var(--scanline-opacity));
+    --primary-dim: hsl(var(--primary-hue), 100%, 50%, 0.33);
+    --primary-dark: hsl(var(--primary-hue), 100%, 20%);   
+
     
     /* Settings Variables */
     --scanline-opacity: 0.12;
@@ -26,9 +28,9 @@
 }
 
 body {
-    font-family: var(--system-font);  /* Changed this line */
+    font-family: var(--system-font);
     background: var(--bg-black);
-    color: var(--neon-green);
+    color: var(--primary-color);
     height: 100vh;
     overflow: hidden;
 }
@@ -59,13 +61,13 @@ body {
 }
 
 .desktop-icon:hover {
-    background: var(--neon-green-glow);
+    background: var(--primary-glow);  /* Same effect, different variable name */
 }
 
 .icon-symbol {
     font-size: 32px;
     margin-bottom: var(--spacing);
-    text-shadow: 0 0 10px var(--neon-green);
+    text-shadow: 0 0 10px var(--primary-color);
 }
 
 .icon-label {
@@ -79,11 +81,11 @@ body {
 .window-frame {
     background: rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(1px);
-    border: 2px solid var(--neon-green);
+    border: 2px solid var(--primary-color);
     border-radius: var(--border-radius);
     box-shadow: 
-        0 0 20px var(--neon-green-dim),
-        inset 3px 3px 0 rgba(0, 255, 65, 0.6),
+        0 0 20px var(--primary-dim),  /* Fixed to match border */
+        inset 3px 3px 0 var(--primary-dim),
         inset -3px -3px 0 rgba(0, 0, 0, 0.8),
         0 0 0 2px rgba(0, 0, 0, 0.8);
     min-width: 300px;
@@ -94,8 +96,8 @@ body {
 
 .window-titlebar {
     background: linear-gradient(180deg, 
-        #33ff66 0%,                               /* Much brighter top */
-        #006622 100%);                            /* Much darker bottom */
+        var(--primary-color) 0%,                  /* Use variable */
+        var(--primary-dark) 100%); 
     color: var(--bg-black);
     padding: var(--spacing) calc(var(--spacing) * 1.5);
     display: flex;
@@ -195,8 +197,8 @@ body::before {
         0deg, 
         transparent 0%, 
         transparent 50%, 
-        var(--neon-green-glow) 50%, 
-        var(--neon-green-glow) 100%
+        var(--primary-glow) 50%, 
+        var(--primary-glow) 100%
     );
     background-size: 100% 3px;
     pointer-events: none;
@@ -221,7 +223,7 @@ body::before {
 }
 
 .file-item:hover {
-    background: var(--neon-green-glow);
+    background: var(--primary-glow);  /* Fixed */
 }
 
 .file-icon {
@@ -252,7 +254,7 @@ body::before {
 }
 
 .game-btn {
-    background: var(--neon-green);
+    background: var(--primary-color);  /* Fixed */
     color: var(--bg-black);
     border: none;
     padding: 8px 12px;
@@ -262,7 +264,7 @@ body::before {
 }
 
 .game-btn:hover {
-    background: var(--neon-green-dim);
+    background: var(--primary-color);  /* Fixed */
 }
 
 /* Window state classes for optimization */
@@ -290,24 +292,24 @@ body::before {
 
 .window-content::-webkit-scrollbar-track {
     background: rgba(0, 0, 0, 0.8);
-    border: 1px solid var(--neon-green);
+    border: 1px solid var(--primary-color);
     border-radius: 0;
 }
 
 .window-content::-webkit-scrollbar-thumb {
     background: linear-gradient(180deg, 
-        var(--neon-green) 0%,
-        #006622 100%);
-    border: 1px solid var(--neon-green);
+        var(--primary-color) 0%,
+        var(--primary-dark) 100%);
+    border: 1px solid var(--primary-color)
     border-radius: 0;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 .window-content::-webkit-scrollbar-thumb:hover {
-    background: var(--neon-green);
+    background: var(--primary-color);
     box-shadow: 
         inset 0 1px 0 rgba(255, 255, 255, 0.4),
-        0 0 8px var(--neon-green-dim);
+        0 0 8px var(--primary-dim);
 }
 
 .window-content::-webkit-scrollbar-corner {
@@ -327,10 +329,10 @@ body::before {
     height: 12px;
     background: linear-gradient(-45deg, 
         transparent 30%, 
-        var(--neon-green) 35%, 
+        var(--primary-color) 35%, 
         transparent 40%,
         transparent 60%,
-        var(--neon-green) 65%,
+        var(--primary-color) 65%,
         transparent 70%);
     pointer-events: none;
 }
@@ -384,11 +386,11 @@ body::before {
 .icon-svg {
    width: 40px;
    height: 40px;
-   filter: brightness(0) saturate(100%) invert(64%) sepia(78%) saturate(3151%) hue-rotate(calc(var(--primary-hue) * 1deg)) brightness(104%) contrast(101%) drop-shadow(0 0 8px var(--neon-green-dim));
+   filter: brightness(0) saturate(100%) invert(64%) sepia(78%) saturate(3151%) hue-rotate(calc(var(--primary-hue) * 1deg)) brightness(104%) contrast(101%) drop-shadow(0 0 8px var(--primary-dim));
 }
 
 .desktop-icon:hover .icon-svg {
-   filter: brightness(0) saturate(100%) invert(64%) sepia(78%) saturate(3151%) hue-rotate(calc(var(--primary-hue) * 1deg)) brightness(120%) contrast(110%) drop-shadow(0 0 12px var(--neon-green));
+   filter: brightness(0) saturate(100%) invert(64%) sepia(78%) saturate(3151%) hue-rotate(calc(var(--primary-hue) * 1deg)) brightness(120%) contrast(110%) drop-shadow(0 0 12px var(--primary-color));
 }
 
 /* Mobile - bigger icons */
@@ -416,15 +418,15 @@ body::before {
     display: block;
     margin-bottom: 4px;
     font-size: 14px;
-    color: var(--neon-green);
+    color: var(--primary-color);  /* Fixed */
 }
 
 .setting-group select,
 .setting-group input[type="range"] {
     width: 100%;
     background: rgba(0, 0, 0, 0.8);
-    border: 1px solid var(--neon-green);
-    color: var(--neon-green);
+    border: 1px solid var(--primary-color);  /* Fixed */
+    color: var(--primary-color);   
     padding: 4px 8px;
     border-radius: 3px;
 }
@@ -432,6 +434,15 @@ body::before {
 .setting-group select:focus,
 .setting-group input[type="range"]:focus {
     outline: none;
-    box-shadow: 0 0 5px var(--neon-green-dim);
+    box-shadow: 0 0 5px var(--primary-dim);  /* Fixed */
 }
 
+.setting-group input[type="range"] {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+    padding: 4px 8px;
+    border-radius: 3px;
+    accent-color: var(--primary-color);  /* This should theme the fill */
+}
