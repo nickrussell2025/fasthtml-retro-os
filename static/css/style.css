@@ -382,10 +382,13 @@ body::before {
    SVG ICONS - NEON GREEN
    ================================= */
 .icon-svg {
-    width: 40px;
-    height: 40px;
-    /* Convert black SVG to neon green + add glow */
-    filter: brightness(0) saturate(100%) invert(64%) sepia(78%) saturate(3151%) hue-rotate(95deg) brightness(104%) contrast(101%) drop-shadow(0 0 8px var(--neon-green-dim));
+   width: 40px;
+   height: 40px;
+   filter: brightness(0) saturate(100%) invert(64%) sepia(78%) saturate(3151%) hue-rotate(calc(var(--primary-hue) * 1deg)) brightness(104%) contrast(101%) drop-shadow(0 0 8px var(--neon-green-dim));
+}
+
+.desktop-icon:hover .icon-svg {
+   filter: brightness(0) saturate(100%) invert(64%) sepia(78%) saturate(3151%) hue-rotate(calc(var(--primary-hue) * 1deg)) brightness(120%) contrast(110%) drop-shadow(0 0 12px var(--neon-green));
 }
 
 /* Mobile - bigger icons */
@@ -394,11 +397,6 @@ body::before {
         width: 48px;
         height: 48px;
     }
-}
-
-/* Hover effect */
-.desktop-icon:hover .icon-svg {
-    filter: brightness(0) saturate(100%) invert(64%) sepia(78%) saturate(3151%) hue-rotate(95deg) brightness(120%) contrast(110%) drop-shadow(0 0 12px var(--neon-green));
 }
 
 
@@ -437,12 +435,3 @@ body::before {
     box-shadow: 0 0 5px var(--neon-green-dim);
 }
 
-/* Themed slider */
-input[type="range"] {
-    accent-color: var(--neon-green);
-}
-
-input[type="range"]::-webkit-slider-thumb {
-    background: var(--neon-green);
-    box-shadow: 0 0 8px var(--neon-green-dim);
-}
