@@ -14,8 +14,11 @@ from desktop.state import WINDOW_CONFIG, window_manager
 # Application setup
 css_link = Link(rel="stylesheet", href="/static/css/style.css", type="text/css")
 js_script = Script(src="/static/js/desktop.js")
-app = FastHTML(hdrs=(css_link, js_script))
+window_manager_script = Script(src="/static/js/window-manager.js")
+settings_manager_script = Script(src="/static/js/settings-manager.js")
 
+
+app = FastHTML(hdrs=(css_link, js_script, window_manager_script, settings_manager_script))
 
 @app.get("/")
 def home():
@@ -48,36 +51,6 @@ def open_item(name: str, type: str, icon_x: int, icon_y: int):
     except Exception as e:
         print(f"ERROR in open_item: {e}")
         return Div(f"Error opening {name}: {str(e)}", cls="error-message")
-
-@app.post("/window/{window_id}/minimize")
-def minimize_window(window_id: str):
-    """Minimize window to taskbar - now uses service"""
-    try:
-        result = desktop_service.minimize_window(window_id)
-        return result if result else ""
-    except Exception as e:
-        print(f"ERROR in minimize_window: {e}")
-        return ""
-
-@app.post("/window/{window_id}/maximize")
-def maximize_window(window_id: str):
-    """Maximize window to full screen - now uses service"""
-    try:
-        result = desktop_service.maximize_window(window_id)
-        return result if result else ""
-    except Exception as e:
-        print(f"ERROR in maximize_window: {e}")
-        return ""
-
-@app.post("/window/{window_id}/restore")
-def restore_window(window_id: str):
-    """Restore window from minimized or maximized state - now uses service"""
-    try:
-        result = desktop_service.restore_window(window_id)
-        return result if result else ""
-    except Exception as e:
-        print(f"ERROR in restore_window: {e}")
-        return ""
 
 @app.delete("/window/{window_id}")
 def close_window(window_id: str):

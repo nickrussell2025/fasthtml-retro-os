@@ -377,12 +377,28 @@ body::before {
 .icon-svg {
    width: 40px;
    height: 40px;
-   filter: brightness(0) saturate(100%) invert(64%) sepia(78%) saturate(3151%) hue-rotate(calc(var(--primary-hue) * 1deg)) brightness(104%) contrast(101%) drop-shadow(0 0 8px var(--primary-dim));
+   filter: hue-rotate(calc(var(--primary-hue) * 1deg)) saturate(2) brightness(1.2) drop-shadow(0 0 8px var(--primary-color));
 }
 
 .desktop-icon:hover .icon-svg {
-   filter: brightness(0) saturate(100%) invert(64%) sepia(78%) saturate(3151%) hue-rotate(calc(var(--primary-hue) * 1deg)) brightness(120%) contrast(110%) drop-shadow(0 0 12px var(--primary-color));
+   filter: hue-rotate(calc(var(--primary-hue) * 1deg)) saturate(2.5) brightness(1.5) drop-shadow(0 0 12px var(--primary-color));
 }
+
+/* .icon-svg {
+   width: 40px;
+   height: 40px;
+   filter: brightness(0) invert(1) hue-rotate(calc(var(--primary-hue) * 1deg)) saturate(2) drop-shadow(0 0 8px var(--primary-color));
+}
+
+.desktop-icon:hover .icon-svg {
+   filter: brightness(0) invert(1) hue-rotate(calc(var(--primary-hue) * 1deg)) saturate(2.5) drop-shadow(0 0 12px var(--primary-color));
+}
+
+.icon-svg {
+   width: 40px;
+   height: 40px;
+   filter: brightness(0) invert(1) sepia(1) hue-rotate(calc(var(--primary-hue) * 1deg)) saturate(1.5) drop-shadow(0 0 8px var(--primary-color));
+} */
 
 /* Mobile - bigger icons */
 @media (max-width: 768px) {

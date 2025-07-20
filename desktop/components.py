@@ -43,19 +43,15 @@ def Window(window_data, maximized=False):
             Span(window_data['name'], cls="window-title"),
             Div(
                 Button(WindowIcon("minimize", 16), cls="window-minimize",
-                    hx_post=f"/window/{window_id}/minimize",
-                    hx_target=f"#{window_id}",
-                    hx_swap="outerHTML"),
+                    onclick=f"windowManager.minimize('{window_id}')"),
                 Button(WindowIcon("maximize", 16), cls="window-maximize",
-                    hx_post=f"/window/{window_id}/maximize",
-                    hx_target=f"#{window_id}",
-                    hx_swap="outerHTML"),
+                    onclick=f"windowManager.maximize('{window_id}')"),
                 Button(WindowIcon("close", 16), cls="window-close",
                     hx_delete=f"/window/{window_id}",
                     hx_target=f"#{window_id}",
                     hx_swap="outerHTML"),
-                cls="window-controls"
-            ),
+                                cls="window-controls"
+                            ),
             cls="window-titlebar"
         ),
         # Window content area
