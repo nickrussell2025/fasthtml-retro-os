@@ -4,7 +4,7 @@ Pure rendering functions - no state management
 """
 from fasthtml.common import *
 
-from desktop.state import FOLDER_CONTENTS, ICON_POSITIONS, window_manager
+from desktop.state import FOLDER_CONTENTS, ICON_POSITIONS, window_manager, settings_manager
 
 
 def WindowIcon(icon_type: str, size: int = 16):
@@ -168,18 +168,20 @@ def Desktop():
     )
 
 def SystemSettings():
-    """System settings panel with theme controls"""
+    """System settings panel with current state reflected in dropdowns"""
+    current = settings_manager.get_all()
+    
     return Div(
         H3("⚙️ System Settings"),
-
+        
         # Theme Color Selection
         Div(
             Label("Theme Color"),
             Select(
-                Option("Matrix Green", value="green", selected=True),
-                Option("Cyber Cyan", value="cyan"),
-                Option("Terminal Amber", value="amber"),
-                Option("Neon Purple", value="purple"),
+                Option("Matrix Green", value="green", selected=current['theme_color'] == 'green'),
+                Option("Cyber Cyan", value="cyan", selected=current['theme_color'] == 'cyan'),
+                Option("Terminal Amber", value="amber", selected=current['theme_color'] == 'amber'), 
+                Option("Neon Purple", value="purple", selected=current['theme_color'] == 'purple'),
                 name="theme_color",
                 hx_post="/settings/theme",
                 hx_target="head",
@@ -187,14 +189,14 @@ def SystemSettings():
             ),
             cls="setting-group"
         ),
-
+        
         # Font Selection
         Div(
             Label("System Font"),
             Select(
-                Option("Courier New", value="courier", selected=True),
-                Option("Monaco", value="monaco"),
-                Option("Consolas", value="consolas"),
+                Option("Courier New", value="courier", selected=current['font'] == 'courier'),
+                Option("Monaco", value="monaco", selected=current['font'] == 'monaco'),
+                Option("Consolas", value="consolas", selected=current['font'] == 'consolas'),
                 name="font",
                 hx_post="/settings/font",
                 hx_target="head",
@@ -202,13 +204,14 @@ def SystemSettings():
             ),
             cls="setting-group"
         ),
-
+        
         # Scanline Intensity
         Div(
             Label("Scanline Intensity"),
             Input(
-                type="range",
-                min="0", max="0.3", step="0.02", value="0.12",
+                type="range", 
+                min="0", max="0.3", step="0.02", 
+                value=current['scanline_intensity'],
                 name="scanline_intensity",
                 hx_post="/settings/scanlines",
                 hx_trigger="input",
@@ -217,6 +220,6 @@ def SystemSettings():
             ),
             cls="setting-group"
         ),
-
+        
         cls="system-settings"
     )

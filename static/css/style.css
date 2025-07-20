@@ -461,3 +461,21 @@ body::before {
     align-items: center;
     background: none;
 }
+
+/* Font dropdown shows options in their respective fonts */
+.setting-group select[name="font"] option[value="courier"] {
+    font-family: 'Courier New', monospace;
+}
+
+.setting-group select[name="font"] option[value="monaco"] {
+    font-family: 'Monaco', monospace;
+}
+
+.setting-group select[name="font"] option[value="consolas"] {
+    font-family: 'Consolas', monospace;
+}
+
+/* The selected value in the dropdown also shows in the chosen font */
+.setting-group select[name="font"] {
+    font-family: var(--system-font);
+}

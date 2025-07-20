@@ -3,6 +3,9 @@ Desktop State Management
 Handles all window lifecycle, positioning, and folder state
 """
 
+from dataclasses import dataclass
+
+
 # Configuration constants
 ICON_POSITIONS = {
     'Documents': (1, 1),
@@ -10,6 +13,34 @@ ICON_POSITIONS = {
     'Game of Life': (1, 2),
     'Settings': (3, 3),
 }
+
+
+@dataclass 
+class DesktopSettings:
+    theme_color: str = "green"
+    font: str = "courier"
+    scanline_intensity: float = 0.12
+
+class SettingsManager:
+    def __init__(self):
+        self.settings = DesktopSettings()
+    
+    def get_setting(self, key: str):
+        return getattr(self.settings, key)
+    
+    def update_setting(self, key: str, value):
+        setattr(self.settings, key, value)
+    
+    def get_all(self):
+        return {
+            'theme_color': self.settings.theme_color,
+            'font': self.settings.font, 
+            'scanline_intensity': self.settings.scanline_intensity
+        }
+
+# Global instance
+settings_manager = SettingsManager()
+
 
 FOLDER_CONTENTS = {
     "Documents": [

@@ -3,9 +3,8 @@ Desktop Services - Incremental Migration
 Start by wrapping existing logic without changing it
 """
 from fasthtml.common import Style
-
+from desktop.state import ICON_POSITIONS, SYSTEM_FONTS, window_manager, settings_manager
 from desktop.components import CreateContent, DesktopIcon, Window, WindowIcon
-from desktop.state import ICON_POSITIONS, SYSTEM_FONTS, window_manager
 
 
 def get_window_icon_html(icon_type="window", size=16):
@@ -123,5 +122,27 @@ class DesktopService:
             :root {{ --scanline-opacity: {scanline_intensity} !important; }}
         """)
 
+    def update_theme(self, theme_color: str):
+        settings_manager.update_setting('theme_color', theme_color)
+        hue_map = {"green": 120, "cyan": 180, "amber": 45, "purple": 270}
+        hue = hue_map[theme_color]
+        
+        return Style(f"""
+            :root {{ --primary-hue: {hue} !important; }}
+        """)
+
+    def update_font(self, font: str):
+        settings_manager.update_setting('font', font)
+        font_family = SYSTEM_FONTS[font]
+        return Style(f"""
+            :root {{ --system-font: {font_family} !important; }}
+        """)
+
+    def update_scanlines(self, scanline_intensity: float):
+        settings_manager.update_setting('scanline_intensity', scanline_intensity)
+        return Style(f"""
+            :root {{ --scanline-opacity: {scanline_intensity} !important; }}
+        """)
+        
 # Global instance
 desktop_service = DesktopService()
