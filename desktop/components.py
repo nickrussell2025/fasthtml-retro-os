@@ -74,18 +74,9 @@ def CreateContent(name, item_type):
 
     elif item_type == "program":
         if name == "Game of Life":
-            return Div(
-                H3("Conway's Game of Life"),
-                Div("🟩🟩⬜⬜🟩", cls="game-preview"),
-                Div(
-                    Button("▶️ Play", cls="game-btn"),
-                    Button("⏸️ Pause", cls="game-btn"),
-                    Button("🔄 Reset", cls="game-btn"),
-                    cls="game-controls"
-                ),
-                P("Click cells to toggle. Watch patterns evolve!"),
-                cls="game-interface"
-            )
+            from programs.game_of_life.components import GameContainer
+            from programs.game_of_life.game import game
+            return GameContainer(game)
         elif name == "Settings":
             return SystemSettings()
         else:
@@ -164,13 +155,13 @@ def Desktop():
     )
 
 def SystemSettings():
-    """System settings panel with current state reflected in dropdowns"""
+    """System settings panel with expanded themes and fonts"""
     current = settings_manager.get_all()
     
     return Div(
         H3("⚙️ System Settings"),
         
-        # Theme Color Selection
+        # Theme Color Selection - EXPANDED
         Div(
             Label("Theme Color"),
             Select(
@@ -178,25 +169,33 @@ def SystemSettings():
                 Option("Cyber Cyan", value="cyan", selected=current['theme_color'] == 'cyan'),
                 Option("Terminal Amber", value="amber", selected=current['theme_color'] == 'amber'), 
                 Option("Neon Purple", value="purple", selected=current['theme_color'] == 'purple'),
+                Option("Blood Red", value="red", selected=current['theme_color'] == 'red'),
+                Option("Retro Orange", value="orange", selected=current['theme_color'] == 'orange'),
+                Option("Hot Pink", value="pink", selected=current['theme_color'] == 'pink'),
+                Option("Electric Lime", value="lime", selected=current['theme_color'] == 'lime'),
+                Option("Neon Blue", value="blue", selected=current['theme_color'] == 'blue'),
+                Option("Pure White", value="white", selected=current['theme_color'] == 'white'),
                 name="theme_color",
-                hx_post="/settings/theme",
-                hx_target="head",
-                hx_swap="beforeend"
+                onchange="settingsManager.save('theme_color', this.value)"
             ),
             cls="setting-group"
         ),
         
-        # Font Selection
+        # Font Selection - EXPANDED
         Div(
             Label("System Font"),
             Select(
                 Option("Courier New", value="courier", selected=current['font'] == 'courier'),
                 Option("Monaco", value="monaco", selected=current['font'] == 'monaco'),
                 Option("Consolas", value="consolas", selected=current['font'] == 'consolas'),
+                Option("Fira Code", value="fira", selected=current['font'] == 'fira'),
+                Option("Ubuntu Mono", value="ubuntu", selected=current['font'] == 'ubuntu'),
+                Option("Source Code Pro", value="source", selected=current['font'] == 'source'),
+                Option("JetBrains Mono", value="jetbrains", selected=current['font'] == 'jetbrains'),
+                Option("Roboto Mono", value="roboto", selected=current['font'] == 'roboto'),
+                Option("Inconsolata", value="inconsolata", selected=current['font'] == 'inconsolata'),
                 name="font",
-                hx_post="/settings/font",
-                hx_target="head",
-                hx_swap="beforeend"
+                onchange="settingsManager.save('font', this.value)"
             ),
             cls="setting-group"
         ),
@@ -209,10 +208,7 @@ def SystemSettings():
                 min="0", max="0.3", step="0.02", 
                 value=current['scanline_intensity'],
                 name="scanline_intensity",
-                hx_post="/settings/scanlines",
-                hx_trigger="input",
-                hx_target="head",
-                hx_swap="beforeend"
+                oninput="settingsManager.save('scanline_intensity', parseFloat(this.value))"
             ),
             cls="setting-group"
         ),

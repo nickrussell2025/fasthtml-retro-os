@@ -54,6 +54,7 @@ FOLDER_CONTENTS = {
 }
 
 THEME_COLORS = {
+    # Existing themes
     "green": {
         "primary": "#00ff41",
         "primary_dim": "#00ff4155",
@@ -77,6 +78,43 @@ THEME_COLORS = {
         "primary_dim": "#8a2be255",
         "primary_glow": "#8a2be208",
         "primary_dark": "#5a1b92"
+    },
+    # NEW THEMES - ADD THESE:
+    "red": {
+        "primary": "#ff2040",
+        "primary_dim": "#ff204055",
+        "primary_glow": "#ff204008",
+        "primary_dark": "#cc1833"
+    },
+    "orange": {
+        "primary": "#ff6600",
+        "primary_dim": "#ff660055",
+        "primary_glow": "#ff660008",
+        "primary_dark": "#cc5200"
+    },
+    "pink": {
+        "primary": "#ff1493",
+        "primary_dim": "#ff149355",
+        "primary_glow": "#ff149308",
+        "primary_dark": "#cc1075"
+    },
+    "lime": {
+        "primary": "#32cd32",
+        "primary_dim": "#32cd3255",
+        "primary_glow": "#32cd3208",
+        "primary_dark": "#28a428"
+    },
+    "blue": {
+        "primary": "#0080ff",
+        "primary_dim": "#0080ff55",
+        "primary_glow": "#0080ff08",
+        "primary_dark": "#0066cc"
+    },
+    "white": {
+        "primary": "#ffffff",
+        "primary_dim": "#ffffff55",
+        "primary_glow": "#ffffff08",
+        "primary_dark": "#cccccc"
     }
 }
 

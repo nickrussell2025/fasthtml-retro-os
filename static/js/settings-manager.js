@@ -45,7 +45,10 @@ class SettingsManager {
     }
 
     applyTheme(themeColor) {
-        const hueMap = { green: 120, cyan: 180, amber: 45, purple: 270 }
+        const hueMap = { 
+            green: 120, cyan: 180, amber: 45, purple: 270,
+            red: 348, orange: 24, pink: 328, lime: 120, blue: 210, white: 0
+        }
         const hue = hueMap[themeColor] || 120
         
         let styleEl = document.getElementById('dynamic-theme')
@@ -63,7 +66,13 @@ class SettingsManager {
         const fontMap = {
             courier: "'Courier New', monospace",
             monaco: "'Monaco', monospace", 
-            consolas: "'Consolas', monospace"
+            consolas: "'Consolas', monospace",
+            fira: "'Fira Code', 'Courier New', monospace",
+            ubuntu: "'Ubuntu Mono', 'Courier New', monospace",
+            source: "'Source Code Pro', 'Courier New', monospace",
+            jetbrains: "'JetBrains Mono', 'Courier New', monospace",
+            roboto: "'Roboto Mono', 'Courier New', monospace",
+            inconsolata: "'Inconsolata', 'Courier New', monospace"
         }
         const fontFamily = fontMap[font] || fontMap.courier
         
@@ -92,11 +101,11 @@ class SettingsManager {
 }
 
 // Create global instance with different name to avoid conflicts
-const settingsManagerNew = new SettingsManager()
+const settingsManager = new SettingsManager()
 
 // Load settings when page loads
 window.addEventListener('load', () => {
-    setTimeout(() => settingsManagerNew.loadAllOnStartup(), 100)
+    setTimeout(() => settingsManager.loadAllOnStartup(), 100)
 })
 
 console.log('NEW Settings manager ready')

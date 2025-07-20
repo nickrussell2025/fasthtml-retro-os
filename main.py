@@ -11,6 +11,10 @@ from desktop.components import Desktop
 from desktop.services import desktop_service
 from desktop.state import WINDOW_CONFIG, window_manager
 
+from programs.game_of_life.routes import setup_gameoflife_routes
+from programs.game_of_life.components import GameContainer
+from programs.game_of_life.game import game
+
 # Application setup
 css_link = Link(rel="stylesheet", href="/static/css/style.css", type="text/css")
 js_script = Script(src="/static/js/desktop.js")
@@ -19,6 +23,7 @@ settings_manager_script = Script(src="/static/js/settings-manager.js")
 
 
 app = FastHTML(hdrs=(css_link, js_script, window_manager_script, settings_manager_script))
+setup_gameoflife_routes(app)
 
 @app.get("/")
 def home():
@@ -85,18 +90,6 @@ def favicon():
 @app.get("/static/{filepath:path}")
 def static_files(filepath: str):
     return FileResponse(f"static/{filepath}")
-
-@app.post("/settings/theme")
-def update_theme(theme_color: str):
-    return desktop_service.update_theme(theme_color)
-
-@app.post("/settings/font")
-def update_font(font: str):
-    return desktop_service.update_font(font)
-
-@app.post("/settings/scanlines")
-def update_scanlines(scanline_intensity: float):
-    return desktop_service.update_scanlines(scanline_intensity)
 
 if __name__ == "__main__":
     serve()
