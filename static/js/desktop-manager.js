@@ -165,3 +165,26 @@ if (document.readyState === 'loading') {
 } else {
     init()
 }
+
+// Orientation and resize handling
+window.addEventListener('orientationchange', function() {
+    setTimeout(function() {
+        document.body.style.height = window.innerHeight + 'px';
+        window.dispatchEvent(new Event('resize'));
+        
+        const desktop = document.querySelector('.desktop-container');
+        if (desktop) {
+            desktop.style.height = window.innerHeight + 'px';
+            desktop.style.width = window.innerWidth + 'px';
+        }
+        console.log('Orientation changed, layout updated');
+    }, 100);
+});
+
+window.addEventListener('resize', function() {
+    const desktop = document.querySelector('.desktop-container');
+    if (desktop && window.innerWidth <= 768) {
+        desktop.style.height = window.innerHeight + 'px';
+        desktop.style.width = window.innerWidth + 'px';
+    }
+});
