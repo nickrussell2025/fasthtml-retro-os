@@ -77,6 +77,10 @@ def CreateContent(name, item_type):
             from programs.game_of_life.components import GameContainer
             from programs.game_of_life.game import game
             return GameContainer(game)
+        elif name == "eReader":
+            from programs.ereader.ereader import EReaderProgram
+            program = EReaderProgram()
+            return program.get_window_content()
         elif name == "Settings":
             return SystemSettings()
         else:
@@ -104,10 +108,13 @@ def DesktopIcon(name, item_type, oob_update=False):
     x, y = ICON_POSITIONS[name]
 
     # Determine icon based on type and current state
+    # Determine icon based on type and current state
     if item_type == "folder" and window_manager.is_folder_open(name):
         icon = NotStr('<img src="/static/icons/folder-open.svg" alt="Open Folder" class="icon-svg">')
     elif item_type == "folder":
         icon = NotStr('<img src="/static/icons/folder.svg" alt="Folder" class="icon-svg">')
+    elif item_type == "program" and name == "eReader":
+        icon = NotStr('<img src="/static/icons/book-open.svg" alt="eReader" class="icon-svg">')
     elif item_type == "program" and name == "Settings":
         icon = NotStr('<img src="/static/icons/settings.svg" alt="Settings" class="icon-svg">')
     elif item_type == "program":
