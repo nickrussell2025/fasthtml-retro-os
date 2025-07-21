@@ -170,7 +170,7 @@ body {
 }
 
 .minimized-icon .window-control-svg {
-    filter: brightness(0) saturate(100%) invert(64%) sepia(78%) saturate(3151%) hue-rotate(calc(var(--primary-hue) * 1deg)) brightness(104%) contrast(101%);
+    filter: brightness(0);  /* Simple black icons */
     vertical-align: middle;
 }
 

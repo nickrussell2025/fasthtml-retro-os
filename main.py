@@ -17,12 +17,12 @@ from programs.game_of_life.game import game
 
 # Application setup
 css_link = Link(rel="stylesheet", href="/static/css/style.css", type="text/css")
-js_script = Script(src="/static/js/desktop.js")
-window_manager_script = Script(src="/static/js/window-manager.js")
+desktop_manager_script = Script(src="/static/js/desktop-manager.js")
 settings_manager_script = Script(src="/static/js/settings-manager.js")
 
+app = FastHTML(hdrs=(css_link, desktop_manager_script, settings_manager_script))
 
-app = FastHTML(hdrs=(css_link, js_script, window_manager_script, settings_manager_script))
+
 setup_gameoflife_routes(app)
 
 @app.get("/")

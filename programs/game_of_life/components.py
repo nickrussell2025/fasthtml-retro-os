@@ -1,3 +1,4 @@
+# programs/game_of_life/components.py
 from fasthtml.common import *
 
 def GameOfLifeInterface(game):
@@ -19,7 +20,7 @@ def GameOfLifeInterface(game):
         
         GameControls(game),
         
-        # Fixed auto-run
+        # RESTORE the working inline JavaScript - with Python/JS conversion fix
         Script(f"""
             console.log('Auto-run status:', {str(game.is_auto_running()).lower()});
             
@@ -27,7 +28,7 @@ def GameOfLifeInterface(game):
                 if (window.golInterval) clearInterval(window.golInterval);
                 
                 let generation = {game.generation};
-                let grid = {game.grid};
+                let grid = {str(game.grid).replace('True', 'true').replace('False', 'false')};
                 const height = {game.height};
                 const width = {game.width};
                 
