@@ -15,15 +15,20 @@ from desktop.state import WINDOW_CONFIG, window_manager
 
 from programs.game_of_life.routes import setup_gameoflife_routes
 
-# Application setup - REMOVED broken game-manager.js 
+from programs.ereader.routes import setup_ereader_routes
+
+
+# Application setup
 css_link = Link(rel="stylesheet", href="/static/css/style.css", type="text/css")
 desktop_manager_script = Script(src="/static/js/desktop-manager.js")
 settings_manager_script = Script(src="/static/js/settings-manager.js")
+ereader_script = Script(src="/static/js/ereader.js")
 
-app = FastHTML(hdrs=(css_link, desktop_manager_script, settings_manager_script))
+app = FastHTML(hdrs=(css_link, desktop_manager_script, settings_manager_script, ereader_script))
 
-# Setup routes
+# Setup program routes
 setup_gameoflife_routes(app)
+setup_ereader_routes(app)
 
 @app.get("/")
 def home():
@@ -73,10 +78,18 @@ def move_window(window_id: str, x: int, y: int):
         print(f"ERROR in move_window: {e}")
         return ""
 
-@app.get("/static/{path:path}")
-def static_files(path: str):
-    """Serve static files"""
-    return FileResponse(f'static/{path}')
+@app.get("/favicon.ico")
+def favicon():
+    import os
+    print(f"Current working directory: {os.getcwd()}")
+    print(f"Looking for file at: {os.path.abspath('static/favicon.ico')}")
+    print(f"File exists: {os.path.exists('static/favicon.ico')}")
+    return FileResponse('static/favicon.ico')
+
+@app.get("/{fname:path}.{ext:static}")
+def static_file(fname: str, ext: str):
+    """Serve static files with proper extension handling"""
+    return FileResponse(f'{fname}.{ext}')
 
 if __name__ == "__main__":
     serve()

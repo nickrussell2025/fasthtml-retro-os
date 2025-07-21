@@ -12,6 +12,7 @@ ICON_POSITIONS = {
     'Programs': (2, 1),
     'Game of Life': (1, 2),
     'Settings': (3, 3),
+    "eReader": (2, 3),
 }
 
 
@@ -152,7 +153,6 @@ class WindowManager:
         self.open_folders = set()
         self._reset_desktop()
 
-
     def create_window(self, name, content, icon_x, icon_y):
         """Creates a window and returns the complete window data structure"""
         window_id = f"win-{name.replace(' ', '-').lower()}"
@@ -161,16 +161,16 @@ class WindowManager:
         if window_id in self.windows:
             return None
 
-        # Calculate position based on icon location using configuration
-        x = (icon_x * WINDOW_CONFIG['ICON_GRID_SIZE']) + WINDOW_CONFIG['WINDOW_OFFSET_X']
-        y = (icon_y * WINDOW_CONFIG['ICON_GRID_SIZE']) + WINDOW_CONFIG['WINDOW_OFFSET_Y']
+        # Smart positioning that scales with viewport
+        base_x = min(icon_x * 100 + 50, 50)  # Never more than 50px from left
+        base_y = min(icon_y * 80 + 30, 80)   # Stagger vertically, max 80px from top
 
         # Create window data structure
         window_data = {
             'id': window_id,
             'name': name,
             'content': content,
-            'position': (x, y),
+            'position': (base_x, base_y),
             'z_index': self.next_z_index,
             'maximized': False,
             'item_type': 'folder' if name in ['Documents', 'Programs'] else 'program'
