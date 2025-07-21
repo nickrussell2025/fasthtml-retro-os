@@ -19,8 +19,9 @@ from programs.game_of_life.game import game
 css_link = Link(rel="stylesheet", href="/static/css/style.css", type="text/css")
 desktop_manager_script = Script(src="/static/js/desktop-manager.js")
 settings_manager_script = Script(src="/static/js/settings-manager.js")
+game_manager_script = Script(src="/static/programs/game_of_life/game-manager.js")
 
-app = FastHTML(hdrs=(css_link, desktop_manager_script, settings_manager_script))
+app = FastHTML(hdrs=(css_link, desktop_manager_script, game_manager_script))
 
 
 setup_gameoflife_routes(app)
@@ -90,6 +91,10 @@ def favicon():
 @app.get("/static/{filepath:path}")
 def static_files(filepath: str):
     return FileResponse(f"static/{filepath}")
+
+@app.get("/programs/{program}/{filepath:path}")
+def program_static_files(program: str, filepath: str):
+    return FileResponse(f"programs/{program}/{filepath}")
 
 if __name__ == "__main__":
     serve()

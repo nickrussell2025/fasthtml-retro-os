@@ -1,37 +1,37 @@
-// CLEAN DESKTOP MANAGER - NO BLOAT, JUST WORKING FEATURES
+// CLEAN DESKTOP MANAGER - WINDOWS ONLY
 console.log('Loading Clean Desktop Manager...')
 
 let zIndex = 1000
 
-// =============================================================================
-// WAIT FOR DOM - SIMPLE CHECK
-// =============================================================================
+function isMobile() {
+    return window.innerWidth <= 768
+}
 
 function init() {
     console.log('Desktop Manager Ready')
     
     // =============================================================================
-    // WINDOW FOCUS - IMMEDIATE, NO DELAYS
+    // WINDOW FOCUS - NEW WINDOWS TO FRONT
     // =============================================================================
     
-    // Watch for new windows
     new MutationObserver(mutations => {
         mutations.forEach(mutation => {
             mutation.addedNodes.forEach(node => {
                 if (node.classList?.contains('window-frame')) {
-                    // Force new window to front immediately
                     zIndex += 100
                     node.style.zIndex = zIndex
-                    console.log('NEW WINDOW TO FRONT:', node.id)
                     
-                    // Check for Game of Life immediately - no delays
-                    checkForGame(node)
+                    if (!isMobile()) {
+                        node.style.position = 'absolute'
+                    }
+                    
+                    console.log('NEW WINDOW TO FRONT:', node.id)
                 }
             })
         })
     }).observe(document.body, { childList: true, subtree: true })
     
-    // Click focus - simple and fast
+    // Click focus
     document.addEventListener('click', (e) => {
         const window = e.target.closest('.window-frame')
         if (window && !e.target.matches('button, input, select, textarea')) {
@@ -41,7 +41,7 @@ function init() {
     })
     
     // =============================================================================
-    // WINDOW DRAGGING - OPTIMIZED FOR SMOOTHNESS
+    // WINDOW DRAGGING
     // =============================================================================
     
     let isDragging = false
@@ -58,7 +58,10 @@ function init() {
         zIndex += 10
         window.style.zIndex = zIndex
         
-        // Start drag - calculate once
+        // Skip dragging on mobile
+        if (isMobile()) return
+        
+        // Start drag
         isDragging = true
         dragWindow = window
         
@@ -68,8 +71,6 @@ function init() {
         
         const handleMove = (e) => {
             if (!isDragging) return
-            
-            // Direct positioning - no calculations in loop
             dragWindow.style.left = (e.clientX - offsetX) + 'px'
             dragWindow.style.top = Math.max(0, e.clientY - offsetY) + 'px'
         }
@@ -87,183 +88,7 @@ function init() {
     })
     
     // =============================================================================
-    // GAME OF LIFE - CLEAN HTMX INTEGRATION
-    // =============================================================================
-    
-    let gameIntervals = new Map()
-    
-    // HTMX cleanup - disabled since inline script handles games
-    // document.addEventListener('htmx:beforeSwap', (e) => {
-    //     if (e.target.id === 'game-container') {
-    //         stopGame(e.target)
-    //     }
-    // })
-    
-    // HTMX restart - disabled since inline script handles games  
-    // document.addEventListener('htmx:afterSwap', (e) => {
-    //     if (e.target.id === 'game-container') {
-    //         checkForGame(e.target)
-    //     }
-    // })
-    
-    function checkForGame(container) {
-        console.log('=== CHECKING FOR GAME ===')
-        console.log('Container:', container)
-        
-        const gameStatus = container.querySelector('#game-status')
-        console.log('Game status element:', gameStatus)
-        
-        if (!gameStatus) {
-            console.log('NO GAME STATUS FOUND - not a game window')
-            return
-        }
-        
-        const statusText = gameStatus.textContent
-        console.log('Status text:', statusText)
-        
-        const hasAutoRunning = statusText.includes('AUTO-RUNNING')
-        console.log('Has AUTO-RUNNING:', hasAutoRunning)
-        
-        if (hasAutoRunning) {
-            console.log('🎮 STARTING AUTO-RUN')
-            startGame(container)
-        } else {
-            console.log('❌ Auto-run not active')
-        }
-    }
-    
-    function startGame(gameContainer) {
-        const windowId = getWindowId(gameContainer)
-        
-        // Stop existing
-        stopGame(gameContainer)
-        
-        // Get grid
-        const gridElement = gameContainer.querySelector('#game-grid')
-        if (!gridElement) {
-            console.error('No game grid found')
-            return
-        }
-        
-        // Extract initial state
-        let grid = extractGrid(gridElement)
-        let generation = extractGeneration(gameContainer)
-        
-        console.log(`Game started: ${grid.length}x${grid[0]?.length}`)
-        
-        // Start interval
-        const interval = setInterval(() => {
-            grid = stepGame(grid)
-            generation++
-            updateDisplay(gameContainer, grid, generation)
-        }, 500)
-        
-        gameIntervals.set(windowId, interval)
-    }
-    
-    function stopGame(gameContainer) {
-        const windowId = getWindowId(gameContainer)
-        const interval = gameIntervals.get(windowId)
-        
-        if (interval) {
-            clearInterval(interval)
-            gameIntervals.delete(windowId)
-            console.log('Game stopped:', windowId)
-        }
-    }
-    
-    function extractGrid(gridElement) {
-        console.log('=== EXTRACTING GRID ===')
-        console.log('Grid element:', gridElement)
-        console.log('Grid children (rows):', gridElement.children.length)
-        
-        const rows = Array.from(gridElement.children)
-        console.log('First row children (cells):', rows[0]?.children.length)
-        
-        const grid = rows.map((row, y) => {
-            const cells = Array.from(row.children)
-            return cells.map((cell, x) => {
-                const bg = cell.style.background
-                const isAlive = bg.includes('var(--primary-color)') || 
-                               (bg !== 'transparent' && bg !== '')
-                return isAlive
-            })
-        })
-        
-        console.log('Extracted grid:', grid.length, 'x', grid[0]?.length)
-        console.log('First few rows:', grid.slice(0, 3))
-        return grid
-    }
-    
-    function extractGeneration(gameContainer) {
-        const statusText = gameContainer.querySelector('#game-status')?.textContent || ''
-        const match = statusText.match(/Generation: (\d+)/)
-        return match ? parseInt(match[1]) : 0
-    }
-    
-    function stepGame(grid) {
-        const height = grid.length
-        const width = grid[0]?.length || 0
-        const newGrid = Array(height).fill().map(() => Array(width).fill(false))
-        
-        for (let y = 0; y < height; y++) {
-            for (let x = 0; x < width; x++) {
-                const neighbors = countNeighbors(grid, x, y, width, height)
-                const isAlive = grid[y][x]
-                
-                if (isAlive && (neighbors === 2 || neighbors === 3)) {
-                    newGrid[y][x] = true
-                } else if (!isAlive && neighbors === 3) {
-                    newGrid[y][x] = true
-                }
-            }
-        }
-        
-        return newGrid
-    }
-    
-    function countNeighbors(grid, x, y, width, height) {
-        let count = 0
-        for (let dy = -1; dy <= 1; dy++) {
-            for (let dx = -1; dx <= 1; dx++) {
-                if (dx === 0 && dy === 0) continue
-                const ny = y + dy
-                const nx = x + dx
-                if (ny >= 0 && ny < height && nx >= 0 && nx < width && grid[ny][nx]) {
-                    count++
-                }
-            }
-        }
-        return count
-    }
-    
-    function updateDisplay(gameContainer, grid, generation) {
-        const statusElement = gameContainer.querySelector('#game-status')
-        const gridElement = gameContainer.querySelector('#game-grid')
-        
-        if (statusElement) {
-            const liveCount = grid.flat().filter(cell => cell).length
-            statusElement.textContent = `Generation: ${generation} • Live cells: ${liveCount} • AUTO-RUNNING`
-        }
-        
-        if (gridElement) {
-            const rows = gridElement.children
-            for (let y = 0; y < grid.length && y < rows.length; y++) {
-                const cells = rows[y].children
-                for (let x = 0; x < grid[y].length && x < cells.length; x++) {
-                    cells[x].style.background = grid[y][x] ? 'var(--primary-color)' : 'transparent'
-                }
-            }
-        }
-    }
-    
-    function getWindowId(gameContainer) {
-        const window = gameContainer.closest('.window-frame')
-        return window ? window.id : 'default-game'
-    }
-    
-    // =============================================================================
-    // WINDOW OPERATIONS - SIMPLE
+    // WINDOW OPERATIONS
     // =============================================================================
     
     window.windowManager = {
@@ -273,10 +98,6 @@ function init() {
             
             window.style.display = 'none'
             addToTaskbar(windowId, window.querySelector('.window-title')?.textContent || 'Window')
-            
-            // Stop any game
-            const gameContainer = window.querySelector('#game-container')
-            if (gameContainer) stopGame(gameContainer)
         },
         
         restore: (windowId) => {
@@ -287,10 +108,6 @@ function init() {
             zIndex += 10
             window.style.zIndex = zIndex
             removeFromTaskbar(windowId)
-            
-            // Restart any game
-            const gameContainer = window.querySelector('#game-container')
-            if (gameContainer) checkForGame(gameContainer)
         },
         
         maximize: (windowId) => {
@@ -304,13 +121,6 @@ function init() {
         
         onWindowClosed: (windowId) => {
             removeFromTaskbar(windowId)
-            
-            // Clean up game
-            const interval = gameIntervals.get(windowId)
-            if (interval) {
-                clearInterval(interval)
-                gameIntervals.delete(windowId)
-            }
         }
     }
     
@@ -346,7 +156,7 @@ function init() {
         if (item) item.remove()
     }
     
-    console.log('Desktop Manager initialized - all features ready')
+    console.log('Desktop Manager initialized')
 }
 
 // Initialize when DOM ready

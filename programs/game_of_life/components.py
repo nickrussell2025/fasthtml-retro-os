@@ -20,69 +20,7 @@ def GameOfLifeInterface(game):
         
         GameControls(game),
         
-        # RESTORE the working inline JavaScript - with Python/JS conversion fix
-        Script(f"""
-            console.log('Auto-run status:', {str(game.is_auto_running()).lower()});
-            
-            if ({str(game.is_auto_running()).lower()}) {{
-                if (window.golInterval) clearInterval(window.golInterval);
-                
-                let generation = {game.generation};
-                let grid = {str(game.grid).replace('True', 'true').replace('False', 'false')};
-                const height = {game.height};
-                const width = {game.width};
-                
-                console.log('Starting auto-run...');
-                
-                window.golInterval = setInterval(() => {{
-                    console.log('Auto-run step:', generation);
-                    
-                    // Conway's rules
-                    const newGrid = [];
-                    for (let y = 0; y < height; y++) {{
-                        newGrid[y] = [];
-                        for (let x = 0; x < width; x++) {{
-                            let neighbors = 0;
-                            for (let dy = -1; dy <= 1; dy++) {{
-                                for (let dx = -1; dx <= 1; dx++) {{
-                                    if (dx === 0 && dy === 0) continue;
-                                    const ny = y + dy, nx = x + dx;
-                                    if (ny >= 0 && ny < height && nx >= 0 && nx < width && grid[ny][nx]) {{
-                                        neighbors++;
-                                    }}
-                                }}
-                            }}
-                            newGrid[y][x] = grid[y][x] ? (neighbors === 2 || neighbors === 3) : (neighbors === 3);
-                        }}
-                    }}
-                    
-                    grid = newGrid;
-                    generation++;
-                    
-                    // Update status
-                    const statusEl = document.getElementById('game-status');
-                    if (statusEl) {{
-                        const liveCount = grid.flat().filter(c => c).length;
-                        statusEl.textContent = `Generation: ${{generation}} • Live cells: ${{liveCount}} • AUTO-RUNNING`;
-                    }}
-                    
-                    // Update grid
-                    const gridEl = document.getElementById('game-grid');
-                    if (gridEl) {{
-                        let html = '';
-                        for (let y = 0; y < height; y++) {{
-                            html += '<div style="display: flex;">';
-                            for (let x = 0; x < width; x++) {{
-                                const bg = grid[y][x] ? 'var(--primary-color)' : 'transparent';
-                                html += `<div onclick="htmx.ajax('POST', '/gameoflife/toggle/${{x}}/${{y}}', {{target: '#game-grid', swap: 'innerHTML'}})" style="width: 15px; height: 15px; border: 1px solid var(--primary-dim); cursor: pointer; background: ${{bg}};"></div>`;
-                            }}
-                            html += '</div>';
-                        }}
-                        gridEl.innerHTML = html;
-                    }}
-                }}, 500);
-            }}
-        """),
+        # Game manager will handle auto-run - no inline JavaScript needed
         
         style="padding: 15px;"
     )
