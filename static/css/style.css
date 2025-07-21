@@ -127,6 +127,7 @@ body {
     align-items: center;
 }
 
+
 /* Shared button base styles */
 .window-minimize,
 .window-maximize,
@@ -173,7 +174,18 @@ body {
     vertical-align: middle;
 }
 
+.window-maximized {
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 999 !important;
+}
 
+#taskbar {
+    font-size: 12px;
+}
 
 /* =================================
    CRT EFFECTS
