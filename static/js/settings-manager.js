@@ -1,7 +1,12 @@
+// static/js/settings-manager.js - Enhanced version that actually works
+
 class SettingsManager {
     constructor() {
         this.prefix = 'retro-os-'
         console.log('SettingsManager initialized')
+        
+        // Load settings immediately when manager is created
+        setTimeout(() => this.loadAllOnStartup(), 100)
     }
     
     save(key, value) {
@@ -84,7 +89,7 @@ class SettingsManager {
         }
         
         styleEl.textContent = `:root { --system-font: ${fontFamily} !important; }`
-        console.log('Applied font:', font, 'family:', fontFamily)
+        console.log('Applied font:', font, fontFamily)
     }
 
     applyScanlines(intensity) {
@@ -100,12 +105,10 @@ class SettingsManager {
     }
 }
 
-// Create global instance with different name to avoid conflicts
-const settingsManager = new SettingsManager()
-
-// Load settings when page loads
-window.addEventListener('load', () => {
-    setTimeout(() => settingsManager.loadAllOnStartup(), 100)
+// Initialize when DOM ready
+document.addEventListener('DOMContentLoaded', function() {
+    window.settingsManager = new SettingsManager()
 })
 
-console.log('NEW Settings manager ready')
+// Also expose globally for settings form
+window.settingsManager = window.settingsManager || new SettingsManager()

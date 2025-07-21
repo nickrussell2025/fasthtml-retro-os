@@ -155,13 +155,16 @@ def Desktop():
     )
 
 def SystemSettings():
-    """System settings panel with expanded themes and fonts"""
+    """System settings panel that applies changes immediately via JavaScript"""
+    
+    # Import your settings manager here 
+    from desktop.state import settings_manager
     current = settings_manager.get_all()
     
     return Div(
         H3("⚙️ System Settings"),
         
-        # Theme Color Selection - EXPANDED
+        # Theme Color Selection - immediate JavaScript updates
         Div(
             Label("Theme Color"),
             Select(
@@ -176,12 +179,12 @@ def SystemSettings():
                 Option("Neon Blue", value="blue", selected=current['theme_color'] == 'blue'),
                 Option("Pure White", value="white", selected=current['theme_color'] == 'white'),
                 name="theme_color",
-                onchange="settingsManager.save('theme_color', this.value)"
+                onchange="settingsManager.save('theme_color', this.value)"  # Immediate JavaScript call
             ),
             cls="setting-group"
         ),
         
-        # Font Selection - EXPANDED
+        # Font Selection - immediate JavaScript updates
         Div(
             Label("System Font"),
             Select(
@@ -195,23 +198,27 @@ def SystemSettings():
                 Option("Roboto Mono", value="roboto", selected=current['font'] == 'roboto'),
                 Option("Inconsolata", value="inconsolata", selected=current['font'] == 'inconsolata'),
                 name="font",
-                onchange="settingsManager.save('font', this.value)"
+                onchange="settingsManager.save('font', this.value)"  # Immediate JavaScript call
             ),
             cls="setting-group"
         ),
         
-        # Scanline Intensity
+        # Scanline Intensity - immediate JavaScript updates
         Div(
-            Label("Scanline Intensity"),
+            Label("Scanline Effect"),
             Input(
-                type="range", 
-                min="0", max="0.3", step="0.02", 
-                value=current['scanline_intensity'],
-                name="scanline_intensity",
-                oninput="settingsManager.save('scanline_intensity', parseFloat(this.value))"
+                type="range",
+                min="0",
+                max="0.3",
+                step="0.01",
+                value=str(current['scanline_intensity']),
+                oninput="settingsManager.save('scanline_intensity', parseFloat(this.value))"  # Immediate update
             ),
+            Div(f"Current: {current['scanline_intensity']:.2f}", 
+                style="font-size: 11px; color: var(--primary-dim); margin-top: 4px;"),
             cls="setting-group"
         ),
         
-        cls="system-settings"
+        cls="settings-content",
+        style="padding: 20px; color: var(--primary-color);"
     )

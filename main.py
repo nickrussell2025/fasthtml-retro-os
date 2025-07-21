@@ -1,3 +1,5 @@
+# main.py - Fixed imports and removed broken game-manager.js
+
 from fasthtml.common import (
     Div,
     FastHTML,
@@ -12,18 +14,15 @@ from desktop.services import desktop_service
 from desktop.state import WINDOW_CONFIG, window_manager
 
 from programs.game_of_life.routes import setup_gameoflife_routes
-from programs.game_of_life.components import GameContainer
-from programs.game_of_life.game import game
 
-# Application setup
+# Application setup - REMOVED broken game-manager.js 
 css_link = Link(rel="stylesheet", href="/static/css/style.css", type="text/css")
 desktop_manager_script = Script(src="/static/js/desktop-manager.js")
 settings_manager_script = Script(src="/static/js/settings-manager.js")
-game_manager_script = Script(src="/static/programs/game_of_life/game-manager.js")
 
-app = FastHTML(hdrs=(css_link, desktop_manager_script, game_manager_script))
+app = FastHTML(hdrs=(css_link, desktop_manager_script, settings_manager_script))
 
-
+# Setup routes
 setup_gameoflife_routes(app)
 
 @app.get("/")
@@ -39,7 +38,7 @@ def home():
 
 @app.post("/open")
 def open_item(name: str, type: str, icon_x: int, icon_y: int):
-    """Handle icon click - now uses service layer"""
+    """Handle icon click"""
     try:
         window, icon_update = desktop_service.open_item(name, type, icon_x, icon_y)
 
@@ -54,13 +53,9 @@ def open_item(name: str, type: str, icon_x: int, icon_y: int):
         print(f"ERROR in open_item: {e}")
         return Div(f"Error opening {name}: {str(e)}", cls="error-message")
 
-    except Exception as e:
-        print(f"ERROR in open_item: {e}")
-        return Div(f"Error opening {name}: {str(e)}", cls="error-message")
-
 @app.delete("/window/{window_id}")
 def close_window(window_id: str):
-    """Close window and clean up state - now uses service"""
+    """Close window and clean up state"""
     try:
         icon_update = desktop_service.close_window(window_id)
         return icon_update if icon_update else ""
@@ -70,7 +65,7 @@ def close_window(window_id: str):
 
 @app.post("/window/{window_id}/move")
 def move_window(window_id: str, x: int, y: int):
-    """Update window position - now uses service"""
+    """Update window position"""
     try:
         success = desktop_service.move_window(window_id, x, y)
         return "" if success else "Error"
@@ -78,23 +73,10 @@ def move_window(window_id: str, x: int, y: int):
         print(f"ERROR in move_window: {e}")
         return ""
 
-@app.get("/favicon.ico")
-def favicon():
-    import os
-    print("Favicon requested!")
-    print("File exists:", os.path.exists("static/favicon.ico"))
-    if os.path.exists("static/favicon.ico"):
-        return FileResponse("static/favicon.ico")
-    else:
-        return "FAVICON FILE NOT FOUND"
-
-@app.get("/static/{filepath:path}")
-def static_files(filepath: str):
-    return FileResponse(f"static/{filepath}")
-
-@app.get("/programs/{program}/{filepath:path}")
-def program_static_files(program: str, filepath: str):
-    return FileResponse(f"programs/{program}/{filepath}")
+@app.get("/static/{path:path}")
+def static_files(path: str):
+    """Serve static files"""
+    return FileResponse(f'static/{path}')
 
 if __name__ == "__main__":
     serve()
