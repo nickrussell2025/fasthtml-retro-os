@@ -331,11 +331,11 @@ body::before {
    MOBILE OPTIMIZATION
    ================================= */
 @media (max-width: 768px) {
-    html, body {                              /* ADD THIS LINE */
-    margin: 0 !important;                 /* ADD THIS LINE */
-    padding: 0 !important;                /* ADD THIS LINE */
-    width: 100% !important;               /* ADD THIS LINE */
-    overflow-x: hidden !important;        /* ADD THIS LINE */
+    html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    overflow-x: hidden !important;
     }   
     .desktop-container {
         grid-template-columns: 1fr 1fr !important;
@@ -363,7 +363,7 @@ body::before {
         border: none !important;
         border-radius: 0 !important;
         z-index: 1000 !important;
-        display: flex !important;
+        display: flex;
         flex-direction: column !important;
     }
 

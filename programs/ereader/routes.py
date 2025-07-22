@@ -23,11 +23,13 @@ def setup_ereader_routes(app):
     
     @app.get("/api/book/frankenstein")
     def get_frankenstein():
-        """Serve the full Frankenstein text"""
+        """Serve local Frankenstein text"""
         try:
-            url = "https://www.gutenberg.org/files/84/84-0.txt"
-            with urllib.request.urlopen(url) as response:
-                text = response.read().decode('utf-8')
+            import os
+            book_path = os.path.join(os.path.dirname(__file__), "books", "frankenstein.txt")
+            
+            with open(book_path, "r", encoding="utf-8") as f:
+                text = f.read()
             
             start_idx = text.find("CHAPTER I")
             end_idx = text.find("End of the Project Gutenberg EBook")
@@ -38,6 +40,5 @@ def setup_ereader_routes(app):
                 book_text = text
                 
             return Response(content=book_text, media_type="text/plain")
-            
-        except Exception as e:
-            return Response(content=f"Error loading book: {str(e)}", media_type="text/plain")
+        except FileNotFoundError:
+            return Response(content="Book file not found", media_type="text/plain", status_code=404)

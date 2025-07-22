@@ -2,8 +2,26 @@ class EReader {
     constructor() {
         this.text = '';
         this.pages = [];
-        this.currentPage = 0;
+        this.userId = this.getOrCreateUserId();
+        this.currentPage = this.loadPage();
         this.load();
+    }
+
+    getOrCreateUserId() {
+        let userId = localStorage.getItem('retro-os-user-id');
+        if (!userId) {
+            userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('retro-os-user-id', userId);
+        }
+        return userId;
+    }
+
+    savePage() {
+        localStorage.setItem(`ereader-page-${this.userId}`, this.currentPage);
+    }
+
+    loadPage() {
+        return parseInt(localStorage.getItem(`ereader-page-${this.userId}`) || '0');
     }
     
     async load() {
@@ -13,8 +31,8 @@ class EReader {
         
         this.text = raw.substring(start > -1 ? start : 0)
             .replace(/\r\n/g, '\n')
-            .replace(/([a-zA-Z,;:.])\n([a-zA-Z])/g, '$1 $2')  // Join mid-sentence breaks
-            .replace(/\n\n+/g, '\n\n')                        // Normalize paragraphs  
+            .replace(/([a-zA-Z,;:.])\n([a-zA-Z])/g, '$1 $2')
+            .replace(/\n\n+/g, '\n\n')
             .trim();
         
         this.splitNextChunk();
@@ -86,6 +104,8 @@ class EReader {
         
         if (prevBtn) prevBtn.disabled = this.currentPage === 0;
         if (nextBtn) nextBtn.disabled = false;
+
+        this.savePage()
     }
     
     setup() {
