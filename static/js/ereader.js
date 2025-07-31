@@ -1,5 +1,7 @@
 class EReader {
     constructor() {
+        localStorage.removeItem(`ereader-page-${this.userId}`);
+        localStorage.removeItem(`ereader-highlights-${this.userId}`);
         this.paragraphs = [];
         this.text = '';
         this.pages = [];
