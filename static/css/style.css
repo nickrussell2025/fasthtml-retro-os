@@ -581,3 +581,7 @@ body::before {
 .ereader-page p:last-child {
     margin-bottom: 0;  /* No margin after the last paragraph */
 }
+
+.window-frame {
+    border: 3px solid var(--primary-color) !important;
+}

@@ -26,6 +26,5 @@ class EReaderProgram:
                 Button("Next →", id="next-btn", disabled=True),
                 cls="ereader-nav"
             ),
-            Script("new EReader();"),
             cls="ereader-content"
         )
