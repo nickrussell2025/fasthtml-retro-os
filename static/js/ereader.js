@@ -1,7 +1,5 @@
 class EReader {
     constructor() {
-        localStorage.removeItem(`ereader-page-${this.userId}`);
-        localStorage.removeItem(`ereader-highlights-${this.userId}`);
         this.paragraphs = [];
         this.text = '';
         this.pages = [];
@@ -79,9 +77,14 @@ class EReader {
             const wordChunk = words.slice(wordIndex, wordIndex + chunkSize);
             const testText = currentPageText + (currentPageText ? ' ' : '') + wordChunk.join(' ');
             
-            container.innerHTML = this.formatText(testText);
+            console.log(`WORD: "${words[wordIndex]}", CURRENT LENGTH: ${currentPageText.length}, CONTAINER: ${container.clientHeight}px`);
+            container.innerHTML = this.formatText(testText, true);
+            console.log(`AFTER FORMAT: scrollHeight=${container.scrollHeight}px, fits=${container.scrollHeight <= container.clientHeight + 25}`);
             
-            if (container.scrollHeight > container.clientHeight + 15 && currentPageText) {
+            if (container.scrollHeight > container.clientHeight + 25 && currentPageText) {
+                console.log(`OVERFLOW: height=${container.scrollHeight}, limit=${container.clientHeight + 25}, currentText ends with: "${currentPageText.slice(-20)}", testing word: "${words[wordIndex]}"`);
+                console.log(`Container actual: ${container.clientHeight}px, CSS height: ${container.style.height}, computed: ${getComputedStyle(container).height}`);
+
                 if (chunkSize === 1) {
                     this.pages.push(currentPageText);
                     currentPageText = words[wordIndex];
@@ -90,9 +93,14 @@ class EReader {
                 } else {
                     while (wordIndex < words.length) {
                         const singleWordTest = currentPageText + (currentPageText ? ' ' : '') + words[wordIndex];
-                        container.innerHTML = this.formatText(singleWordTest);
+                        console.log(`SINGLE WORD TEST: "${words[wordIndex]}", LENGTH: ${singleWordTest.length}`);
+                        console.log(`WORD: "${words[wordIndex]}" - Before: ${container.scrollHeight}px`);
+                        container.innerHTML = this.formatText(singleWordTest, true);
+                        console.log(`WORD: "${words[wordIndex]}" - After: ${container.scrollHeight}px`);
+                        console.log(`HTML: ${container.innerHTML.slice(0, 100)}...`);
+                        console.log(`SINGLE WORD RESULT: scrollHeight=${container.scrollHeight}px, fits=${container.scrollHeight <= container.clientHeight + 25}`);
                         
-                        if (container.scrollHeight > container.clientHeight + 15) {
+                        if (container.scrollHeight > container.clientHeight + 25) {
                             this.pages.push(currentPageText);
                             currentPageText = words[wordIndex];
                             pagesAdded++;
@@ -115,18 +123,22 @@ class EReader {
         }
     }
 
-    formatText(text) {
+    formatText(text, testing = false) {
         return text.split('\n\n')
             .filter(p => p.trim())
             .map(p => {
                 const correctParagraphId = this.findParagraphIdForFragment(p.trim());
-                const isHighlighted = this.highlights.includes(correctParagraphId);
-                const bgStyle = isHighlighted ? 'background-color: rgba(255, 255, 0, 0.1);' : '';
+                const isHighlighted = this.highlights.some(h => h.id === correctParagraphId);
+                const bgStyle = isHighlighted ? 'background-color: rgba(255, 255, 0, 0.3);' : '';
                 
-                // Convert _text_ to italic formatting
-                const formattedText = p.trim().replace(/_(.*?)_/g, '<em>$1</em>');
+                const formattedText = p.trim()
+                    .replace(/\n/g, ' ')
+                    .replace(/_(.*?)_/g, '<em>$1</em>');
                 
-                return `<p data-id="${correctParagraphId}" style="margin: 0 0 0.3em 0; text-align: justify; line-height: 1.4; ${bgStyle}">${formattedText}</p><br>`;
+                // Use left-align for testing, justify for display
+                const textAlign = testing ? 'left' : 'justify';
+                
+                return `<p data-id="${correctParagraphId}" style="margin: 0 0 0.5em 0; text-align: ${textAlign}; line-height: 1.4; ${bgStyle}">${formattedText}</p>`;
             }).join('');
     }
 
@@ -168,7 +180,7 @@ class EReader {
         }
         
         const pageText = this.pages[this.currentPage] || '';
-        container.innerHTML = this.formatText(pageText);
+        container.innerHTML = this.formatText(pageText, false); // ← ADD false here for justified display
         
         const pageInfo = document.querySelector('.ereader-nav span');
         if (pageInfo) pageInfo.textContent = `Page ${this.currentPage + 1}`;
@@ -206,12 +218,13 @@ class EReader {
             
             const paragraphId = paragraph.getAttribute('data-id');
             
-            if (this.highlights.includes(paragraphId)) {
-                this.highlights = this.highlights.filter(id => id !== paragraphId);
+            if (this.highlights.some(h => h.id === paragraphId)) {
+                this.highlights = this.highlights.filter(h => h.id !== paragraphId);
                 console.log('Removed highlight:', paragraphId);
             } else {
-                this.highlights.push(paragraphId);
-                console.log('Added highlight:', paragraphId);
+                const enrichedHighlight = this.createEnrichedHighlight(paragraphId);
+                this.highlights.push(enrichedHighlight);
+                console.log('Added highlight:', enrichedHighlight);
             }
             
             this.saveHighlights();
@@ -219,6 +232,51 @@ class EReader {
             console.log('Total highlights:', this.highlights.length);
         });
     }
+
+    createEnrichedHighlight(paragraphId) {
+        const paragraph = this.paragraphs.find(p => p.id === paragraphId);
+        if (!paragraph) return null;
+        
+        return {
+            id: paragraphId,
+            text: paragraph.text,
+            timestamp: new Date().toISOString(),
+            chapter: this.detectChapterForParagraph(paragraph),
+            globalIndex: this.paragraphs.indexOf(paragraph),
+            preview: paragraph.text.substring(0, 100) + '...'
+        };
+    }
+
+    detectChapterForParagraph(paragraph) {
+        const text = paragraph.text;
+        
+        if (text.includes('*To Mrs. Saville')) return { name: 'Letter 1', index: 1 };
+        if (text.includes('August 5th')) return { name: 'Letter 2', index: 2 };
+        if (text.includes('August 19th')) return { name: 'Letter 3', index: 3 };
+        if (text.includes('August 26th')) return { name: 'Letter 4', index: 4 };
+        if (text.match(/^CHAPTER\s+(\d+|[IVX]+)/i)) {
+            const match = text.match(/^CHAPTER\s+([IVX]+|\d+)/i);
+            return { name: `Chapter ${match[1]}`, index: this.parseChapterNumber(match[1]) + 4 };
+        }
+        
+        return { name: 'Unknown', index: 0 };
+    }
+
+    parseChapterNumber(roman) {
+        const romanNumerals = { I: 1, II: 2, III: 3, IV: 4, V: 5, VI: 6, VII: 7, VIII: 8, IX: 9, X: 10 };
+        return romanNumerals[roman] || parseInt(roman) || 0;
+    }
+
+    exportHighlights() {
+        return {
+            book: 'frankenstein',
+            user: this.userId,
+            timestamp: new Date().toISOString(),
+            total_highlights: this.highlights.length,
+            highlights: this.highlights.sort((a, b) => a.globalIndex - b.globalIndex)
+        };
+    }
+
 }
 
 // Auto-initialize when HTMX loads new content
