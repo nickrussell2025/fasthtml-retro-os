@@ -64,6 +64,8 @@ def Window(window_data, maximized=False):
 
 def CreateContent(name, item_type):
     """Create appropriate content based on item type and name"""
+    print(f"DEBUG: CreateContent called with name='{name}', item_type='{item_type}'")
+
     if item_type == "folder":
         files = FOLDER_CONTENTS.get(name, ["📂 Empty folder"])
 
@@ -83,6 +85,9 @@ def CreateContent(name, item_type):
             return program.get_window_content()
         elif name == "Settings":
             return SystemSettings()
+        elif name == "Highlights":
+            print("DEBUG: Matched Highlights.txt!")
+            return HighlightsDisplay()
         else:
             return Div(
                 H3(f"{name}"),
@@ -108,13 +113,14 @@ def DesktopIcon(name, item_type, oob_update=False):
     x, y = ICON_POSITIONS[name]
 
     # Determine icon based on type and current state
-    # Determine icon based on type and current state
     if item_type == "folder" and window_manager.is_folder_open(name):
         icon = NotStr('<img src="/static/icons/folder-open.svg" alt="Open Folder" class="icon-svg">')
     elif item_type == "folder":
         icon = NotStr('<img src="/static/icons/folder.svg" alt="Folder" class="icon-svg">')
     elif item_type == "program" and name == "eReader":
         icon = NotStr('<img src="/static/icons/book-open.svg" alt="eReader" class="icon-svg">')
+    elif item_type == "program" and name == "Highlights":
+        icon = NotStr('<img src="/static/icons/highlighter.svg" alt="Highlights" class="icon-svg">')
     elif item_type == "program" and name == "Settings":
         icon = NotStr('<img src="/static/icons/settings.svg" alt="Settings" class="icon-svg">')
     elif item_type == "program":
@@ -228,4 +234,12 @@ def SystemSettings():
         
         cls="settings-content",
         style="padding: 20px; color: var(--primary-color);"
+    )
+
+def HighlightsDisplay():
+    """Basic highlights viewer structure"""
+    return Div(
+        H3("Your Highlights"),
+        Div(id="highlights-list", cls="highlights-content"),
+        cls="highlights-viewer"
     )

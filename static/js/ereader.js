@@ -4,10 +4,11 @@ class EReader {
         this.text = '';
         this.pages = [];
         this.userId = this.getOrCreateUserId();
-        this.currentPage = this.loadPage();
         this.highlights = this.loadHighlights();
         this.load();
         this.setupBasicHighlighting();
+        this.currentChapter = { name: 'Unknown', index: 0 };
+
     }
 
     getOrCreateUserId() {
@@ -42,6 +43,7 @@ class EReader {
         
         this.processBookText(raw);
         this.splitNextChunk();
+        this.currentPage = this.loadPage();
         this.show();
         this.setup();
     }
@@ -180,7 +182,9 @@ class EReader {
         }
         
         const pageText = this.pages[this.currentPage] || '';
-        container.innerHTML = this.formatText(pageText, false); // ← ADD false here for justified display
+        container.innerHTML = this.formatText(pageText, false);
+        this.updateCurrentChapter();
+
         
         const pageInfo = document.querySelector('.ereader-nav span');
         if (pageInfo) pageInfo.textContent = `Page ${this.currentPage + 1}`;
@@ -248,23 +252,36 @@ class EReader {
     }
 
     detectChapterForParagraph(paragraph) {
-        const text = paragraph.text;
-        
-        if (text.includes('*To Mrs. Saville')) return { name: 'Letter 1', index: 1 };
-        if (text.includes('August 5th')) return { name: 'Letter 2', index: 2 };
-        if (text.includes('August 19th')) return { name: 'Letter 3', index: 3 };
-        if (text.includes('August 26th')) return { name: 'Letter 4', index: 4 };
-        if (text.match(/^CHAPTER\s+(\d+|[IVX]+)/i)) {
-            const match = text.match(/^CHAPTER\s+([IVX]+|\d+)/i);
-            return { name: `Chapter ${match[1]}`, index: this.parseChapterNumber(match[1]) + 4 };
-        }
-        
-        return { name: 'Unknown', index: 0 };
+        return this.currentChapter;
     }
 
     parseChapterNumber(roman) {
         const romanNumerals = { I: 1, II: 2, III: 3, IV: 4, V: 5, VI: 6, VII: 7, VIII: 8, IX: 9, X: 10 };
         return romanNumerals[roman] || parseInt(roman) || 0;
+    }
+
+    updateCurrentChapter() {
+        const pageText = this.pages[this.currentPage] || '';
+        const detected = this.detectChapterInText(pageText);
+        if (detected.name !== 'Unknown') {
+            this.currentChapter = detected;
+        }
+    }
+
+    detectChapterInText(text) {
+        // Look for letter headers first
+        if (text.includes('Letter 1') && text.includes('_To Mrs. Saville, England._')) return { name: 'Letter 1', index: 1 };
+        if (text.includes('Letter 2') && text.includes('_To Mrs. Saville, England._')) return { name: 'Letter 2', index: 2 };
+        if (text.includes('Letter 3') && text.includes('_To Mrs. Saville, England._')) return { name: 'Letter 3', index: 3 };
+        if (text.includes('Letter 4') && text.includes('_To Mrs. Saville, England._')) return { name: 'Letter 4', index: 4 };
+        
+        // Look for chapter headers
+        const chapterMatch = text.match(/Chapter\s+(\d+)/i);
+        if (chapterMatch) {
+            return { name: `Chapter ${chapterMatch[1]}`, index: parseInt(chapterMatch[1]) + 4 };
+        }
+        
+        return { name: 'Unknown', index: 0 };
     }
 
     exportHighlights() {

@@ -351,17 +351,17 @@ body::before {
     
     .window-frame {
         position: fixed !important;
-        inset: 0 !important;
-        width: 100% !important;
-        height: 100% !important;
+        inset: 2px !important;
+        width: calc(100vw - 4px) !important;
+        height: calc(100dvh - 4px) !important;
         max-width: none !important;
         max-height: none !important;
         min-width: 0 !important;
         min-height: 0 !important;
         margin: 0 !important;
         padding: 0 !important;
-        border: none !important;
-        border-radius: 0 !important;
+        border: 2px solid var(--primary-color) !important;
+        border-radius: var(--border-radius) !important;
         z-index: 1000 !important;
         display: flex;
         flex-direction: column !important;

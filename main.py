@@ -23,8 +23,9 @@ css_link = Link(rel="stylesheet", href="/static/css/style.css", type="text/css")
 desktop_manager_script = Script(src="/static/js/desktop-manager.js")
 settings_manager_script = Script(src="/static/js/settings-manager.js")
 ereader_script = Script(src="/static/js/ereader.js")
+highlights_script = Script(src="/static/js/highlights-viewer.js")
 
-app = FastHTML(hdrs=(css_link, desktop_manager_script, settings_manager_script, ereader_script))
+app = FastHTML(hdrs=(css_link, desktop_manager_script, settings_manager_script, ereader_script, highlights_script))
 
 # Setup program routes
 setup_gameoflife_routes(app)

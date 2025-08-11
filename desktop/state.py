@@ -13,6 +13,7 @@ ICON_POSITIONS = {
     'Game of Life': (1, 2),
     'Settings': (3, 3),
     "eReader": (2, 3),
+    "Highlights": (2, 4),
 }
 
 
