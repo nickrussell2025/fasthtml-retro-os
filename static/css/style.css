@@ -576,3 +576,40 @@ body::before {
     text-align: justify;
     line-height: 1.5;
 }
+
+/* Dual Progress Bars at Bottom */
+.chapter-progress-container {
+    position: fixed;
+    bottom: 4px;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 3px;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 1001;
+}
+
+.book-progress-container {
+    position: fixed;
+    bottom: 0px;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 12px;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+}
+
+.chapter-progress-fill {
+    height: 100%;
+    background: #ff6b35; /* Orange for chapter */
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+.book-progress-fill {
+    height: 100%;
+    background: #4ecdc4; /* Teal for book */
+    width: 0%;
+    transition: width 0.3s ease;
+}

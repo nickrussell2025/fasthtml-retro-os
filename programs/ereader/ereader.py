@@ -26,5 +26,15 @@ class EReaderProgram:
                 Button("Next →", id="next-btn", disabled=True),
                 cls="ereader-nav"
             ),
+            
+            # Dual progress bars at bottom
+            Div(
+                Div(id="chapter-progress-fill", cls="chapter-progress-fill"),
+                cls="chapter-progress-container"
+            ),
+            Div(
+                Div(id="book-progress-fill", cls="book-progress-fill"), 
+                cls="book-progress-container"
+            ),
             cls="ereader-content"
         )

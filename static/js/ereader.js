@@ -26,6 +26,28 @@ class EReader {
         localStorage.setItem(`ereader-page-${this.userId}`, this.currentPage);
     }
 
+    updateProgressBar() {
+        if (!this.text || this.pages.length === 0) return;
+        
+        const currentPosition = this.getTextPosition(this.currentPage);
+        const totalTextLength = this.text.length;
+        
+        const bookProgressPercent = (currentPosition / totalTextLength) * 100;
+        const chapterProgressPercent = this.calculateChapterProgress(currentPosition);
+        
+        localStorage.setItem(`ereader-progress-percent-${this.userId}`, bookProgressPercent.toFixed(1));
+        
+        const bookProgressBar = document.getElementById('book-progress-fill');
+        const chapterProgressBar = document.getElementById('chapter-progress-fill');
+        
+        if (bookProgressBar) {
+            bookProgressBar.style.width = `${bookProgressPercent}%`;
+        }
+        if (chapterProgressBar) {
+            chapterProgressBar.style.width = `${chapterProgressPercent}%`;
+        }
+    }
+
     loadPage() {
         return parseInt(localStorage.getItem(`ereader-page-${this.userId}`) || '0');
     }
@@ -38,12 +60,79 @@ class EReader {
         const saved = localStorage.getItem(`ereader-highlights-${this.userId}`);
         return saved ? JSON.parse(saved) : [];
     }
+
+    initializeChapterBoundaries() {
+        const cacheKey = `chapter-boundaries-${this.userId}-frankenstein`;
+        const cached = localStorage.getItem(cacheKey);
+        
+        if (cached) {
+            this.chapterBoundaries = JSON.parse(cached);
+            return;
+        }
+        
+        this.chapterBoundaries = this.calculateChapterBoundaries();
+        localStorage.setItem(cacheKey, JSON.stringify(this.chapterBoundaries));
+    }
+
+    calculateChapterBoundaries() {
+        const boundaries = [];
+        const chapterPatterns = [/Letter\s+(\d+)/gi, /Chapter\s+(\d+)/gi];
+        
+        let lastEnd = 0;
+        let chapterIndex = 0;
+        
+        for (const pattern of chapterPatterns) {
+            let match;
+            pattern.lastIndex = 0;
+            
+            while ((match = pattern.exec(this.text)) !== null) {
+                if (match.index > lastEnd) {
+                    boundaries.push({
+                        name: match[0],
+                        index: chapterIndex++,
+                        startPos: lastEnd,
+                        endPos: match.index
+                    });
+                    lastEnd = match.index;
+                }
+            }
+        }
+        
+        if (lastEnd < this.text.length) {
+            boundaries.push({
+                name: "Final Chapter",
+                index: chapterIndex,
+                startPos: lastEnd,
+                endPos: this.text.length
+            });
+        }
+        
+        return boundaries;
+    }
+
+    findCurrentChapter(currentPosition) {
+        if (!this.chapterBoundaries) return null;
+        return this.chapterBoundaries.find(chapter => 
+            currentPosition >= chapter.startPos && currentPosition < chapter.endPos
+        );
+    }
+
+    calculateChapterProgress(currentPosition) {
+        const chapter = this.findCurrentChapter(currentPosition);
+        if (!chapter) return 0;
+        
+        const chapterLength = chapter.endPos - chapter.startPos;
+        const positionInChapter = currentPosition - chapter.startPos;
+        
+        return Math.min(100, (positionInChapter / chapterLength) * 100);
+    }
     
     async load() {
         const response = await fetch('/api/book/frankenstein');
         const raw = await response.text();
         
         this.processBookText(raw);
+        this.initializeChapterBoundaries();
         this.splitNextChunk();
         this.currentPage = this.loadPage();
         this.isLoaded = true;
@@ -209,6 +298,9 @@ class EReader {
         console.log('Final currentPage before savePage():', this.currentPage);
         this.savePage();
         console.log('=== END SHOW() DEBUG ===');
+
+        this.updateProgressBar();
+
     }
     
     setup() {
