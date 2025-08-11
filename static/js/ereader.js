@@ -434,6 +434,11 @@ function initEReaders() {
         }
         console.log('EReader instance ready');
     }
+    
+    // Add library initialization
+    if (document.querySelector('.library-container')) {
+        initLibrary();
+    }
 }
 
 // Run on page load and when HTMX adds new content
@@ -445,4 +450,26 @@ if (document.readyState === 'loading') {
 
 if (typeof htmx !== 'undefined') {
     htmx.onLoad(initEReaders);
+}
+
+// Library functions - add at end of static/js/ereader.js
+function populateLibraryProgress() {
+    const userId = localStorage.getItem('retro-os-user-id');
+    if (!userId) return;
+    
+    const progressKey = `ereader-progress-percent-${userId}`;
+    const progress = parseFloat(localStorage.getItem(progressKey) || '0');
+    
+    const progressLabel = document.getElementById('progress-frankenstein');
+    const progressBar = document.getElementById('progress-bar-frankenstein');
+    const actionBtn = document.getElementById('action-frankenstein');
+    
+    if (progressLabel) progressLabel.textContent = `${progress.toFixed(1)}% complete`;
+    if (progressBar) progressBar.style.width = `${progress}%`;
+    if (actionBtn && progress > 0) actionBtn.textContent = 'Continue Reading';
+}
+
+function initLibrary() {
+    console.log('Library interface loaded');
+    populateLibraryProgress();
 }

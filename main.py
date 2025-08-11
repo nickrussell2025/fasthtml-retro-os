@@ -92,5 +92,19 @@ def static_file(fname: str, ext: str):
     """Serve static files with proper extension handling"""
     return FileResponse(f'{fname}.{ext}')
 
+
+@app.get("/ereader/library")
+def show_library():
+    """Return library view - Feature 2 entry point"""
+    from programs.ereader.library import LibraryView
+    return LibraryView()
+
+@app.post("/ereader/open") 
+def open_book(book_id: str):
+    """Open specific book - Feature 2 book launcher"""
+    from programs.ereader.ereader import EReaderProgram
+    program = EReaderProgram()
+    return program.get_window_content(book_id=book_id)
+
 if __name__ == "__main__":
     serve()
