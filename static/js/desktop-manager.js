@@ -1,5 +1,4 @@
 // CLEAN DESKTOP MANAGER - WINDOWS ONLY
-console.log('Loading Clean Desktop Manager...')
 
 let zIndex = 1000
 
@@ -8,7 +7,6 @@ function isMobile() {
 }
 
 function init() {
-    console.log('Desktop Manager Ready')
     
     // =============================================================================
     // WINDOW FOCUS - NEW WINDOWS TO FRONT
@@ -25,7 +23,6 @@ function init() {
                         node.style.position = 'absolute'
                     }
                     
-                    console.log('NEW WINDOW TO FRONT:', node.id)
                 }
             })
         })
@@ -156,7 +153,6 @@ function init() {
         if (item) item.remove()
     }
     
-    console.log('Desktop Manager initialized')
 }
 
 // Initialize when DOM ready
@@ -177,7 +173,6 @@ window.addEventListener('orientationchange', function() {
             desktop.style.height = window.innerHeight + 'px';
             desktop.style.width = window.innerWidth + 'px';
         }
-        console.log('Orientation changed, layout updated');
     }, 100);
 });
 

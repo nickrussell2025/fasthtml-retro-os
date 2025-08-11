@@ -1,31 +1,38 @@
 # programs/game_of_life/components.py
 from fasthtml.common import *
+from functools import lru_cache
+
 
 def GameContainer(game):
     """Main entry point - matches your existing code"""
     return GameOfLifeInterface(game)
 
+@lru_cache(maxsize=30)
+def cached_game_interface(generation: int, live_cells: int):
+    """Cache the static parts of the interface"""
+    return {
+        'title': H3("Conway's Game of Life", style="text-align: center; margin-bottom: 10px; color: var(--primary-color);"),
+        'status': Div(f"Generation: {generation} • Live cells: {live_cells}",
+                     style="text-align: center; margin-bottom: 10px; font-size: 12px; color: var(--primary-color);"),
+        'controls': GameControls()
+    }
+
 def GameOfLifeInterface(game):
-    """Clean, simple game interface - no auto-run complexity"""
+    """Clean, simple game interface - now with caching"""
+    # Get cached components
+    cached = cached_game_interface(game.generation, game.get_live_cell_count())
+    
     return Div(
-        H3("Conway's Game of Life", 
-           style="text-align: center; margin-bottom: 10px; color: var(--primary-color);"),
+        cached['title'],
+        cached['status'],
         
-        # Status display
-        Div(
-            f"Generation: {game.generation} • Live cells: {game.get_live_cell_count()}",
-            style="text-align: center; margin-bottom: 10px; font-size: 12px; color: var(--primary-color);"
-        ),
-        
-        # Game grid
+        # Game grid (can't cache this effectively since it changes)
         Div(
             GameGrid(game),
             style="display: flex; flex-direction: column; align-items: center; margin: 15px 0; border: 2px solid var(--primary-color); padding: 5px; background: rgba(0, 0, 0, 0.3);"
         ),
         
-        # Simple controls
-        GameControls(),
-        
+        cached['controls'],
         style="padding: 15px;"
     )
 

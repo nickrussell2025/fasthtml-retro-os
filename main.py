@@ -7,6 +7,10 @@ from fasthtml.common import (
     Link,
     Script,
     serve,
+    H2,
+    Button,
+    H3,
+    P,
 )
 
 from desktop.components import Desktop
@@ -106,5 +110,38 @@ def open_book(book_id: str):
     program = EReaderProgram()
     return program.get_window_content(book_id=book_id)
 
+# Add this section after your existing routes in main.py
+
+import psutil
+import os
+import gc
+
+@app.get("/debug/memory")
+def memory_stats():
+    """Basic memory monitoring endpoint"""
+    process = psutil.Process(os.getpid())
+    memory_info = process.memory_info()
+    
+    return Div(
+        H2("🔍 Memory Stats"),
+        P(f"Physical RAM: {round(memory_info.rss / 1024 / 1024, 2)} MB"),
+        P(f"Virtual Memory: {round(memory_info.vms / 1024 / 1024, 2)} MB"),
+        P(f"Memory %: {round(process.memory_percent(), 2)}%"),
+        P(f"Python Objects: {len(gc.get_objects()):,}"),
+        P(f"Threads: {process.num_threads()}"),
+        style="padding: 20px; font-family: var(--system-font);"
+    )
+
+@app.get("/debug/fast-test")
+def fast_test():
+    """Test FastHTML raw speed"""
+    return Div("Fast response", style="padding: 20px;")
+
+@app.post("/debug/simple-post")
+def simple_post_test():
+    """Test raw POST performance"""
+    return Div("Simple POST response")
+
 if __name__ == "__main__":
-    serve()
+    import uvicorn
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=False)

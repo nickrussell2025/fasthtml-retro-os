@@ -53,7 +53,7 @@ def BookCard(book_id, book_data):
     """Individual book card component"""
     return Div(
         BookCover(book_id),
-        BookInfo(book_data),
+        BookInfo(book_data, book_id),
         BookActions(book_id, book_data),
         cls="book-card",
         **{"data-book-id": book_id}
@@ -66,18 +66,18 @@ def BookCover(book_id):
         cls="book-cover"
     )
 
-def BookInfo(book_data):
+def BookInfo(book_data, book_id):
     """Book information display"""
     subtitle_text = f": {book_data['subtitle']}" if book_data["subtitle"] else ""
     
     return Div(
         H3(f"{book_data['title']}{subtitle_text}", cls="book-title"),
         P(f"by {book_data['author']} ({book_data['year']})", cls="book-author"),
-        BookProgress(book_data),
+        BookProgress(book_data, book_id),
         cls="book-info"
     )
 
-def BookProgress(book_data):
+def BookProgress(book_data, book_id):
     """Progress display component - client-side populated"""
     return Div(
         Div("Progress loading...", cls="progress-label", id=f"progress-{book_data['title'].lower().replace(' ', '_')}"),

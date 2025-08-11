@@ -1,10 +1,6 @@
-"""
-Desktop UI Components
-Pure rendering functions - no state management
-"""
 from fasthtml.common import *
-
 from desktop.state import FOLDER_CONTENTS, ICON_POSITIONS, window_manager, settings_manager
+from functools import lru_cache
 
 
 def WindowIcon(icon_type: str, size: int = 16):
@@ -22,40 +18,37 @@ def WindowIcon(icon_type: str, size: int = 16):
     return NotStr(f'<img src="{icon_path}" alt="{icon_type}" class="window-control-svg" style="width: {size}px; height: {size}px;">')
 
 
-def Window(window_data, maximized=False):
-    """Render window from standardized window data structure"""
-    if not window_data:
-        return Div("Error: No window data provided")
-
-    # Determine window styling based on state
-    if maximized or window_data.get('maximized', False):
-        style = "position: absolute; left: 0; top: 0; width: 100vw; height: 100vh;"
-    else:
-        x, y = window_data['position']
-        z = window_data['z_index']
-        style = f"position: absolute; left: {x}px; top: {y}px; z-index: {z};"
-
-    window_id = window_data['id']
-
+@lru_cache(maxsize=15)
+def cached_window_titlebar(title: str, window_id: str):
+    """Cache window titlebar generation"""
     return Div(
-        # Window titlebar with controls
+        Span(title, cls="window-title"),
         Div(
-            Span(window_data['name'], cls="window-title"),
-            Div(
-                Button(WindowIcon("minimize", 16), cls="window-minimize",
-                    onclick=f"windowManager.minimize('{window_id}')"),
-                Button(WindowIcon("maximize", 16), cls="window-maximize",
-                    onclick=f"windowManager.maximize('{window_id}')"),
-                Button(WindowIcon("close", 16), cls="window-close",
-                    hx_delete=f"/window/{window_id}",
-                    hx_target=f"#{window_id}",
-                    hx_swap="outerHTML"),
-                                cls="window-controls"
-                            ),
-            cls="window-titlebar"
+            Button(WindowIcon("minimize", 16), onclick=f"windowManager.minimize('{window_id}')", cls="window-minimize"),
+            Button(WindowIcon("maximize", 16), onclick=f"windowManager.maximize('{window_id}')", cls="window-maximize"),  
+            Button(WindowIcon("close", 16), hx_delete=f"/window/{window_id}", hx_target=f"#{window_id}",
+                   hx_swap="outerHTML", cls="window-close"),
+            cls="window-controls"
         ),
-        # Window content area
-        Div(window_data['content'], cls="window-content"),
+        cls="window-titlebar"
+    )
+
+def Window(title: str, content: FT, window_id: str = None, transparent: bool = False):
+    """Reusable window component with caching"""
+    if window_id is None:
+        window_id = f"window-{title.replace(' ', '-').lower()}"
+    
+    # Get cached titlebar
+    titlebar = cached_window_titlebar(title, window_id)
+    
+    # Build window styling
+    style = "position: absolute; left: 100px; top: 100px; z-index: 1000;"
+    if transparent:
+        style += " background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(2px);"
+    
+    return Div(
+        titlebar,
+        Div(content, cls="window-content"),
         Div(cls="resize-handle"),
         cls="window-frame",
         id=window_id,
@@ -98,22 +91,11 @@ def CreateContent(name, item_type):
     else:
         return Div(f"Unknown item type: {item_type}", cls="error-content")
 
-def DesktopIcon(name, item_type, oob_update=False):
-    """
-    Render desktop icon based on current state
-    Args:
-        name: Icon name
-        item_type: 'folder' or 'program'
-        oob_update: If True, marks for out-of-band HTMX update
-    """
-    # Get position from configuration
-    if name not in ICON_POSITIONS:
-        raise ValueError(f"No position defined for icon: {name}")
-
-    x, y = ICON_POSITIONS[name]
-
+@lru_cache(maxsize=20)
+def cached_icon_content(name: str, item_type: str, is_open: bool):
+    """Cache icon SVG generation"""
     # Determine icon based on type and current state
-    if item_type == "folder" and window_manager.is_folder_open(name):
+    if item_type == "folder" and is_open:
         icon = NotStr('<img src="/static/icons/folder-open.svg" alt="Open Folder" class="icon-svg">')
     elif item_type == "folder":
         icon = NotStr('<img src="/static/icons/folder.svg" alt="Folder" class="icon-svg">')
@@ -127,6 +109,25 @@ def DesktopIcon(name, item_type, oob_update=False):
         icon = NotStr('<img src="/static/icons/gamepad.svg" alt="Program" class="icon-svg">')
     else:
         icon = NotStr('<img src="/static/icons/folder.svg" alt="File" class="icon-svg">')
+    
+    return (
+        Div(icon, cls="icon-symbol"),
+        Div(name, cls="icon-label")
+    )
+
+def DesktopIcon(name, item_type, oob_update=False):
+    """
+    Render desktop icon with caching
+    """
+    # Get position from configuration
+    if name not in ICON_POSITIONS:
+        raise ValueError(f"No position defined for icon: {name}")
+
+    x, y = ICON_POSITIONS[name]
+    is_open = window_manager.is_folder_open(name) if item_type == "folder" else False
+    
+    # Get cached icon content
+    icon_symbol, icon_label = cached_icon_content(name, item_type, is_open)
 
     # Create unique ID for this icon
     icon_id = f"icon-{name.replace(' ', '-').lower()}"
@@ -150,8 +151,8 @@ def DesktopIcon(name, item_type, oob_update=False):
         attrs['hx_swap_oob'] = 'true'
 
     return Div(
-        Div(icon, cls="icon-symbol"),
-        Div(name, cls="icon-label"),
+        icon_symbol,
+        icon_label,
         **attrs
     )
 

@@ -1,8 +1,5 @@
 class EReader {
-    constructor() {
-        console.log('=== NEW EREADER INSTANCE CREATED ===');
-        console.log('Total instances so far:', (window.ereaderCount = (window.ereaderCount || 0) + 1));
-        
+    constructor() {        
         this.paragraphs = [];
         this.text = '';
         this.pages = [];
@@ -134,7 +131,11 @@ class EReader {
         this.processBookText(raw);
         this.initializeChapterBoundaries();
         this.splitNextChunk();
-        this.currentPage = this.loadPage();
+        
+        const savedPage = this.loadPage();
+        
+        this.currentPage = savedPage;
+        
         this.isLoaded = true;
         this.show();
         this.setup();
@@ -171,14 +172,8 @@ class EReader {
             const wordChunk = words.slice(wordIndex, wordIndex + chunkSize);
             const testText = currentPageText + (currentPageText ? ' ' : '') + wordChunk.join(' ');
             
-            console.log(`WORD: "${words[wordIndex]}", CURRENT LENGTH: ${currentPageText.length}, CONTAINER: ${container.clientHeight}px`);
-            container.innerHTML = this.formatText(testText, true);
-            console.log(`AFTER FORMAT: scrollHeight=${container.scrollHeight}px, fits=${container.scrollHeight <= container.clientHeight + 25}`);
-            
+            container.innerHTML = this.formatText(testText, true);            
             if (container.scrollHeight > container.clientHeight + 25 && currentPageText) {
-                console.log(`OVERFLOW: height=${container.scrollHeight}, limit=${container.clientHeight + 25}, currentText ends with: "${currentPageText.slice(-20)}", testing word: "${words[wordIndex]}"`);
-                console.log(`Container actual: ${container.clientHeight}px, CSS height: ${container.style.height}, computed: ${getComputedStyle(container).height}`);
-
                 if (chunkSize === 1) {
                     this.pages.push(currentPageText);
                     currentPageText = words[wordIndex];
@@ -188,12 +183,7 @@ class EReader {
                     while (wordIndex < words.length) {
                         const singleWordTest = currentPageText + (currentPageText ? ' ' : '') + words[wordIndex];
                         console.log(`SINGLE WORD TEST: "${words[wordIndex]}", LENGTH: ${singleWordTest.length}`);
-                        console.log(`WORD: "${words[wordIndex]}" - Before: ${container.scrollHeight}px`);
-                        container.innerHTML = this.formatText(singleWordTest, true);
-                        console.log(`WORD: "${words[wordIndex]}" - After: ${container.scrollHeight}px`);
-                        console.log(`HTML: ${container.innerHTML.slice(0, 100)}...`);
-                        console.log(`SINGLE WORD RESULT: scrollHeight=${container.scrollHeight}px, fits=${container.scrollHeight <= container.clientHeight + 25}`);
-                        
+                        container.innerHTML = this.formatText(singleWordTest, true);                        
                         if (container.scrollHeight > container.clientHeight + 25) {
                             this.pages.push(currentPageText);
                             currentPageText = words[wordIndex];
@@ -256,24 +246,15 @@ class EReader {
     }
     
     show() {
-        console.log('SHOW() CALLED FROM:', new Error().stack);
-        console.log('=== SHOW() DEBUG ===');
-        console.log('Entering show() with currentPage:', this.currentPage);
-        console.log('Pages array length:', this.pages.length);
-        
         if (this.currentPage >= this.pages.length) {
-            console.log('RESETTING PAGE TO 0 - currentPage >= pages.length');
             this.currentPage = 0;
         }
         if (this.currentPage < 0) {
-            console.log('RESETTING PAGE TO 0 - currentPage < 0');
             this.currentPage = 0;
         }
         
         if (this.currentPage >= this.pages.length - 2) {
-            console.log('TRIGGERING splitNextChunk() - near end of pages');
             this.splitNextChunk();
-            console.log('After splitNextChunk, pages.length is now:', this.pages.length);
         }
         
         const container = document.querySelector('.ereader-page');
@@ -295,10 +276,7 @@ class EReader {
         if (prevBtn) prevBtn.disabled = this.currentPage === 0;
         if (nextBtn) nextBtn.disabled = false;
 
-        console.log('Final currentPage before savePage():', this.currentPage);
         this.savePage();
-        console.log('=== END SHOW() DEBUG ===');
-
         this.updateProgressBar();
 
     }
@@ -325,27 +303,17 @@ class EReader {
             const paragraph = e.target.closest('p[data-id]');
             if (!paragraph || !paragraph.closest('.ereader-page')) return;
             
-            console.log('=== HIGHLIGHT CLICK DEBUG ===');
-            console.log('Current page BEFORE highlight:', this.currentPage);
-            console.log('Pages array length BEFORE:', this.pages.length);
-            
             const paragraphId = paragraph.getAttribute('data-id');
             
             if (this.highlights.some(h => h.id === paragraphId)) {
                 this.highlights = this.highlights.filter(h => h.id !== paragraphId);
-                console.log('Removed highlight:', paragraphId);
             } else {
                 const enrichedHighlight = this.createEnrichedHighlight(paragraphId);
                 this.highlights.push(enrichedHighlight);
-                console.log('Added highlight:', enrichedHighlight);
             }
             
             this.saveHighlights();
-            console.log('About to call this.show()...');
             this.refreshHighlights();
-            console.log('Current page AFTER show():', this.currentPage);
-            console.log('Pages array length AFTER:', this.pages.length);
-            console.log('=== END HIGHLIGHT DEBUG ===');
         });
     }
 

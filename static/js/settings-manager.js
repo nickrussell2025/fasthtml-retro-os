@@ -3,14 +3,12 @@
 class SettingsManager {
     constructor() {
         this.prefix = 'retro-os-'
-        console.log('SettingsManager initialized')
         
         // Load settings immediately when manager is created
         setTimeout(() => this.loadAllOnStartup(), 100)
     }
     
     save(key, value) {
-        console.log('Saving setting:', key, '=', value)
         localStorage.setItem(this.prefix + key, JSON.stringify(value))
         this.applySetting(key, value)
     }
@@ -18,12 +16,10 @@ class SettingsManager {
     load(key, defaultValue) {
         const stored = localStorage.getItem(this.prefix + key)
         const value = stored ? JSON.parse(stored) : defaultValue
-        console.log('Loading setting:', key, '=', value)
         return value
     }
     
     loadAllOnStartup() {
-        console.log('Loading all settings on startup...')
         const theme = this.load('theme_color', 'green')
         const font = this.load('font', 'courier')
         const scanlines = this.load('scanline_intensity', 0.12)
@@ -64,7 +60,6 @@ class SettingsManager {
         }
         
         styleEl.textContent = `:root { --primary-hue: ${hue} !important; }`
-        console.log('Applied theme:', themeColor, 'hue:', hue)
     }
 
     applyFont(font) {
@@ -89,7 +84,6 @@ class SettingsManager {
         }
         
         styleEl.textContent = `:root { --system-font: ${fontFamily} !important; }`
-        console.log('Applied font:', font, fontFamily)
     }
 
     applyScanlines(intensity) {
@@ -101,14 +95,8 @@ class SettingsManager {
         }
         
         styleEl.textContent = `:root { --scanline-opacity: ${intensity} !important; }`
-        console.log('Applied scanlines:', intensity)
     }
 }
-
-// Initialize when DOM ready
-document.addEventListener('DOMContentLoaded', function() {
-    window.settingsManager = new SettingsManager()
-})
 
 // Also expose globally for settings form
 window.settingsManager = window.settingsManager || new SettingsManager()
