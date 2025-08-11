@@ -1,5 +1,8 @@
 class EReader {
     constructor() {
+        console.log('=== NEW EREADER INSTANCE CREATED ===');
+        console.log('Total instances so far:', (window.ereaderCount = (window.ereaderCount || 0) + 1));
+        
         this.paragraphs = [];
         this.text = '';
         this.pages = [];
@@ -8,7 +11,6 @@ class EReader {
         this.load();
         this.setupBasicHighlighting();
         this.currentChapter = { name: 'Unknown', index: 0 };
-
     }
 
     getOrCreateUserId() {
@@ -44,6 +46,7 @@ class EReader {
         this.processBookText(raw);
         this.splitNextChunk();
         this.currentPage = this.loadPage();
+        this.isLoaded = true;
         this.show();
         this.setup();
     }
@@ -164,15 +167,24 @@ class EReader {
     }
     
     show() {
+        console.log('SHOW() CALLED FROM:', new Error().stack);
+        console.log('=== SHOW() DEBUG ===');
+        console.log('Entering show() with currentPage:', this.currentPage);
+        console.log('Pages array length:', this.pages.length);
+        
         if (this.currentPage >= this.pages.length) {
+            console.log('RESETTING PAGE TO 0 - currentPage >= pages.length');
             this.currentPage = 0;
         }
         if (this.currentPage < 0) {
+            console.log('RESETTING PAGE TO 0 - currentPage < 0');
             this.currentPage = 0;
         }
         
         if (this.currentPage >= this.pages.length - 2) {
+            console.log('TRIGGERING splitNextChunk() - near end of pages');
             this.splitNextChunk();
+            console.log('After splitNextChunk, pages.length is now:', this.pages.length);
         }
         
         const container = document.querySelector('.ereader-page');
@@ -184,7 +196,6 @@ class EReader {
         const pageText = this.pages[this.currentPage] || '';
         container.innerHTML = this.formatText(pageText, false);
         this.updateCurrentChapter();
-
         
         const pageInfo = document.querySelector('.ereader-nav span');
         if (pageInfo) pageInfo.textContent = `Page ${this.currentPage + 1}`;
@@ -195,7 +206,9 @@ class EReader {
         if (prevBtn) prevBtn.disabled = this.currentPage === 0;
         if (nextBtn) nextBtn.disabled = false;
 
+        console.log('Final currentPage before savePage():', this.currentPage);
         this.savePage();
+        console.log('=== END SHOW() DEBUG ===');
     }
     
     setup() {
@@ -220,6 +233,10 @@ class EReader {
             const paragraph = e.target.closest('p[data-id]');
             if (!paragraph || !paragraph.closest('.ereader-page')) return;
             
+            console.log('=== HIGHLIGHT CLICK DEBUG ===');
+            console.log('Current page BEFORE highlight:', this.currentPage);
+            console.log('Pages array length BEFORE:', this.pages.length);
+            
             const paragraphId = paragraph.getAttribute('data-id');
             
             if (this.highlights.some(h => h.id === paragraphId)) {
@@ -232,8 +249,11 @@ class EReader {
             }
             
             this.saveHighlights();
-            this.show();
-            console.log('Total highlights:', this.highlights.length);
+            console.log('About to call this.show()...');
+            this.refreshHighlights();
+            console.log('Current page AFTER show():', this.currentPage);
+            console.log('Pages array length AFTER:', this.pages.length);
+            console.log('=== END HIGHLIGHT DEBUG ===');
         });
     }
 
@@ -294,14 +314,34 @@ class EReader {
         };
     }
 
+    refreshHighlights() {
+        const container = document.querySelector('.ereader-page');
+        if (!container) return;
+        
+        const pageText = this.pages[this.currentPage] || '';
+        container.innerHTML = this.formatText(pageText, false);
+    }
+    reconnectDOM() {
+        // Reinitialize for new window
+        this.setup();
+        this.show();
+        console.log('EReader reconnected to new window');
+    }
 }
 
 // Auto-initialize when HTMX loads new content
 function initEReaders() {
-    document.querySelectorAll('.ereader-page:not([data-initialized])').forEach(container => {
-        container.setAttribute('data-initialized', 'true');
-        new EReader();
-    });
+    const containers = document.querySelectorAll('.ereader-page');
+    if (containers.length > 0) {
+        // Create new instance for each new window, but only one per session
+        if (window.ereaderInstance) {
+            // Reconnect existing instance to new DOM
+            window.ereaderInstance.reconnectDOM();
+        } else {
+            window.ereaderInstance = new EReader();
+        }
+        console.log('EReader instance ready');
+    }
 }
 
 // Run on page load and when HTMX adds new content
