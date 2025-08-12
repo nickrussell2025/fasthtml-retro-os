@@ -799,3 +799,30 @@ body::before {
         grid-template-columns: 1fr;
     }
 }
+
+.retro-btn {
+    background: transparent;
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
+    padding: 6px 12px;
+    font-family: var(--system-font);
+    cursor: pointer;
+    border-radius: 0;
+}
+
+.retro-btn:hover {
+    background: var(--primary-color);
+    color: var(--bg-black);
+}
+
+.button-icon {
+    width: 14px;
+    height: 14px;
+    margin-right: 6px;
+    vertical-align: middle;
+    filter: brightness(0) invert(1) hue-rotate(calc(var(--primary-hue) * 1deg)) saturate(2);
+}
+
+.retro-btn:hover .button-icon {
+    filter: brightness(0);
+}

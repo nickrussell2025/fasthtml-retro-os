@@ -3,6 +3,18 @@ from desktop.state import FOLDER_CONTENTS, ICON_POSITIONS, window_manager, setti
 from functools import lru_cache
 
 
+def Icon(name: str, cls: str = "icon-svg", alt: str = None, size: int = None):
+    """Reusable SVG icon component with theming support"""
+    if alt is None:
+        alt = name.title().replace('-', ' ')
+    
+    style = ""
+    if size:
+        style = f' style="width: {size}px; height: {size}px;"'
+    
+    return NotStr(f'<img src="/static/icons/{name}.svg" alt="{alt}" class="{cls}"{style}>')
+
+
 def WindowIcon(icon_type: str, size: int = 16):
     """Create SVG icons for window controls and taskbar using existing icon files"""
     icon_paths = {
@@ -26,12 +38,12 @@ def cached_window_titlebar(title: str, window_id: str):
         Div(
             Button(WindowIcon("minimize", 16), onclick=f"windowManager.minimize('{window_id}')", cls="window-minimize"),
             Button(WindowIcon("maximize", 16), onclick=f"windowManager.maximize('{window_id}')", cls="window-maximize"),  
-            Button(WindowIcon("close", 16), hx_delete=f"/window/{window_id}", hx_target=f"#{window_id}",
-                   hx_swap="outerHTML", cls="window-close"),
+            Button(WindowIcon("close", 16), onclick=f"windowManager.close('{window_id}')", cls="window-close"),
             cls="window-controls"
         ),
         cls="window-titlebar"
     )
+
 
 def Window(title: str, content: FT, window_id: str = None, transparent: bool = False):
     """Reusable window component with caching"""
@@ -55,12 +67,14 @@ def Window(title: str, content: FT, window_id: str = None, transparent: bool = F
         style=style
     )
 
+
 def CreateContent(name, item_type):
     """Create appropriate content based on item type and name"""
     print(f"DEBUG: CreateContent called with name='{name}', item_type='{item_type}'")
 
     if item_type == "folder":
-        files = FOLDER_CONTENTS.get(name, ["📂 Empty folder"])
+        files = FOLDER_CONTENTS.get(name, [Div(Icon("folder", "file-icon"), " Empty folder", cls="empty-folder-message")
+        ])
 
         return Div(
             *[Div(file_item, cls="file-item") for file_item in files],
@@ -91,13 +105,12 @@ def CreateContent(name, item_type):
     else:
         return Div(f"Unknown item type: {item_type}", cls="error-content")
 
+
 @lru_cache(maxsize=20)
 def cached_icon_content(name: str, item_type: str, is_open: bool):
-    """Cache icon SVG generation"""
-    # Determine icon based on type and current state
-    if item_type == "folder" and is_open:
-        icon = NotStr('<img src="/static/icons/folder-open.svg" alt="Open Folder" class="icon-svg">')
-    elif item_type == "folder":
+    """Cache icon SVG generation - ignore is_open, always show closed folders"""
+    # Always show closed folder - client handles open state
+    if item_type == "folder":
         icon = NotStr('<img src="/static/icons/folder.svg" alt="Folder" class="icon-svg">')
     elif item_type == "program" and name == "eReader":
         icon = NotStr('<img src="/static/icons/book-open.svg" alt="eReader" class="icon-svg">')
@@ -105,6 +118,8 @@ def cached_icon_content(name: str, item_type: str, is_open: bool):
         icon = NotStr('<img src="/static/icons/highlighter.svg" alt="Highlights" class="icon-svg">')
     elif item_type == "program" and name == "Settings":
         icon = NotStr('<img src="/static/icons/settings.svg" alt="Settings" class="icon-svg">')
+    elif item_type == "program" and name == "Game of Life":
+        icon = NotStr('<img src="/static/icons/gamepad.svg" alt="Game of Life" class="icon-svg">')
     elif item_type == "program":
         icon = NotStr('<img src="/static/icons/gamepad.svg" alt="Program" class="icon-svg">')
     else:
@@ -116,18 +131,15 @@ def cached_icon_content(name: str, item_type: str, is_open: bool):
     )
 
 def DesktopIcon(name, item_type, oob_update=False):
-    """
-    Render desktop icon with caching
-    """
+    """Render desktop icon - always show closed folders"""
     # Get position from configuration
     if name not in ICON_POSITIONS:
         raise ValueError(f"No position defined for icon: {name}")
 
     x, y = ICON_POSITIONS[name]
-    is_open = window_manager.is_folder_open(name) if item_type == "folder" else False
     
-    # Get cached icon content
-    icon_symbol, icon_label = cached_icon_content(name, item_type, is_open)
+    # Always pass False for is_open - client handles visual state
+    icon_symbol, icon_label = cached_icon_content(name, item_type, False)
 
     # Create unique ID for this icon
     icon_id = f"icon-{name.replace(' ', '-').lower()}"
@@ -156,6 +168,7 @@ def DesktopIcon(name, item_type, oob_update=False):
         **attrs
     )
 
+
 def Desktop():
     """Create the main desktop layout with icons"""
     print(f"🔍 DEBUG: Available icons: {list(ICON_POSITIONS.keys())}")
@@ -168,6 +181,7 @@ def Desktop():
         id="desktop"
     )
 
+
 def SystemSettings():
     """System settings panel that applies changes immediately via JavaScript"""
     
@@ -176,7 +190,7 @@ def SystemSettings():
     current = settings_manager.get_all()
     
     return Div(
-        H3("⚙️ System Settings"),
+        H3(Icon("settings", "inline-icon"), " System Settings", style="margin-bottom: 20px; color: var(--primary-color);"),
         
         # Theme Color Selection - immediate JavaScript updates
         Div(
@@ -236,6 +250,7 @@ def SystemSettings():
         cls="settings-content",
         style="padding: 20px; color: var(--primary-color);"
     )
+
 
 def HighlightsDisplay():
     """Basic highlights viewer structure"""

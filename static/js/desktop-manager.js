@@ -23,6 +23,20 @@ function init() {
                         node.style.position = 'absolute'
                     }
                     
+                    // ADD THIS - Change folder icon to open when window appears
+                    const title = node.querySelector('.window-title')?.textContent
+                    if (title === 'Documents' || title === 'Programs') {
+                        const icons = document.querySelectorAll('.desktop-icon')
+                        icons.forEach(icon => {
+                            const label = icon.querySelector('.icon-label')
+                            if (label && label.textContent === title) {
+                                const iconImg = icon.querySelector('.icon-svg')
+                                if (iconImg) {
+                                    iconImg.src = '/static/icons/folder-open.svg'  // open folder
+                                }
+                            }
+                        })
+                    }
                 }
             })
         })
@@ -88,6 +102,10 @@ function init() {
     // WINDOW OPERATIONS
     // =============================================================================
     
+// =============================================================================
+// WINDOW OPERATIONS
+// =============================================================================
+
     window.windowManager = {
         minimize: (windowId) => {
             const window = document.getElementById(windowId)
@@ -114,6 +132,30 @@ function init() {
             zIndex += 10
             window.style.zIndex = zIndex
             window.classList.toggle('window-maximized')
+        },
+        
+        close: (windowId) => {
+            const window = document.getElementById(windowId)
+            if (!window) return
+            
+            // Check if it's a folder and update icon
+            const title = window.querySelector('.window-title')?.textContent
+            if (title === 'Documents' || title === 'Programs') {
+                // Update desktop icon to closed state
+                const icons = document.querySelectorAll('.desktop-icon')
+                icons.forEach(icon => {
+                    const label = icon.querySelector('.icon-label')
+                    if (label && label.textContent === title) {
+                        const iconImg = icon.querySelector('.icon-svg')
+                        if (iconImg) {
+                            iconImg.src = '/static/icons/folder.svg'  // closed folder
+                        }
+                    }
+                })
+            }
+            
+            window.remove()
+            removeFromTaskbar(windowId)
         },
         
         onWindowClosed: (windowId) => {

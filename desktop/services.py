@@ -34,6 +34,7 @@ class DesktopService:
         
         if (closed_window_data and 
             closed_window_data.get('item_type') == 'folder'):
+            # The folder state is now closed, return updated icon
             return DesktopIcon(closed_window_data['name'], 'folder', oob_update=True)
         return None
 

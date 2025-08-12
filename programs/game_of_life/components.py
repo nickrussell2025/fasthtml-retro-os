@@ -1,6 +1,7 @@
 # programs/game_of_life/components.py
 from fasthtml.common import *
 from functools import lru_cache
+from desktop.components import Icon
 
 
 def GameContainer(game):
@@ -63,23 +64,23 @@ def GameGrid(game):
 def GameControls():
     """Basic game controls - no auto-run"""
     return Div(
-        Button("⏭️ Step", 
-               hx_post="/gameoflife/step",
-               hx_target="closest .window-content",
-               hx_swap="innerHTML",
-               style="background: var(--primary-color); color: var(--bg-black); border: none; padding: 8px 12px; margin: 0 5px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px;"),
-        
-        Button("🗑️ Clear", 
-               hx_post="/gameoflife/clear",
-               hx_target="closest .window-content", 
-               hx_swap="innerHTML",
-               style="background: var(--primary-dark); color: var(--primary-color); border: 1px solid var(--primary-color); padding: 8px 12px; margin: 0 5px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px;"),
-        
-        Button("🎲 Random", 
-               hx_post="/gameoflife/random",
-               hx_target="closest .window-content",
-               hx_swap="innerHTML", 
-               style="background: var(--primary-dark); color: var(--primary-color); border: 1px solid var(--primary-color); padding: 8px 12px; margin: 0 5px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px;"),
+        Button(Icon("trash", "button-icon"), " Clear", 
+            hx_post="/gameoflife/clear",
+            hx_target="closest .window-content", 
+            hx_swap="innerHTML",
+            cls="retro-btn"),
+
+        Button(Icon("dice", "button-icon"), " Random", 
+            hx_post="/gameoflife/random",
+            hx_target="closest .window-content",
+            hx_swap="innerHTML",
+            cls="retro-btn"),
+
+        Button(Icon("play", "button-icon"), " Step",
+            hx_post="/gameoflife/step",
+            hx_target="closest .window-content",
+            hx_swap="innerHTML",
+            cls="retro-btn"),
         
         style="text-align: center; margin-top: 15px;"
     )

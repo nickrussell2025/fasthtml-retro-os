@@ -50,8 +50,14 @@ def home():
 def open_item(name: str, type: str, icon_x: int, icon_y: int):
     """Handle icon click"""
     try:
+        # Force clear any existing window state
+        window_id = f"win-{name.replace(' ', '-').lower()}"
+        window_manager.windows.pop(window_id, None)  # Remove if exists
+        if name in ['Documents', 'Programs']:
+            window_manager.close_folder(name)  # Mark folder as closed
+        
         window, icon_update = desktop_service.open_item(name, type, icon_x, icon_y)
-
+        
         if window is None:
             return ""
 
@@ -63,15 +69,6 @@ def open_item(name: str, type: str, icon_x: int, icon_y: int):
         print(f"ERROR in open_item: {e}")
         return Div(f"Error opening {name}: {str(e)}", cls="error-message")
 
-@app.delete("/window/{window_id}")
-def close_window(window_id: str):
-    """Close window and clean up state"""
-    try:
-        icon_update = desktop_service.close_window(window_id)
-        return icon_update if icon_update else ""
-    except Exception as e:
-        print(f"ERROR in close_window: {e}")
-        return ""
 
 @app.post("/window/{window_id}/move")
 def move_window(window_id: str, x: int, y: int):
