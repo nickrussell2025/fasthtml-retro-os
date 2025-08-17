@@ -5,143 +5,154 @@ Handles all window lifecycle, positioning, and folder state
 
 from dataclasses import dataclass
 
-
 # Configuration constants
 ICON_POSITIONS = {
     'Documents': (1, 1),
     'Programs': (2, 1),
     'Game of Life': (1, 2),
     'Settings': (3, 3),
-    "eReader": (2, 3),
-    "Highlights": (2, 4),
+    'eReader': (2, 3),
+    'Highlights': (2, 4),
 }
 
 
-@dataclass 
+@dataclass
 class DesktopSettings:
-    theme_color: str = "green"
-    font: str = "courier"
+    theme_color: str = 'green'
+    font: str = 'courier'
     scanline_intensity: float = 0.12
+
 
 class SettingsManager:
     def __init__(self):
         self.settings = DesktopSettings()
-    
+
     def get_setting(self, key: str):
         return getattr(self.settings, key)
-    
+
     def update_setting(self, key: str, value):
         setattr(self.settings, key, value)
-    
+
     def get_all(self):
         return {
             'theme_color': self.settings.theme_color,
-            'font': self.settings.font, 
-            'scanline_intensity': self.settings.scanline_intensity
+            'font': self.settings.font,
+            'scanline_intensity': self.settings.scanline_intensity,
         }
+
 
 # Global instance
 settings_manager = SettingsManager()
 
 
 FOLDER_CONTENTS = {
-    "Documents": [
-        "📄 resume.txt", "📄 notes.txt", "📁 projects/",
-        "📄 report.docx", "📄 invoice.pdf", "📄 contract.txt",
-        "📁 photos/", "📁 backups/", "📄 todo.md",
-        "📄 budget.xlsx", "📄 letter.doc", "📁 archive/",
-        "📄 presentation.pptx", "📄 manual.pdf"
+    'Documents': [
+        '📄 resume.txt',
+        '📄 notes.txt',
+        '📁 projects/',
+        '📄 report.docx',
+        '📄 invoice.pdf',
+        '📄 contract.txt',
+        '📁 photos/',
+        '📁 backups/',
+        '📄 todo.md',
+        '📄 budget.xlsx',
+        '📄 letter.doc',
+        '📁 archive/',
+        '📄 presentation.pptx',
+        '📄 manual.pdf',
     ],
-    "Programs": ["🎮 Game of Life", "🧮 Calculator", "📝 Text Editor"]
+    'Programs': ['🎮 Game of Life', '🧮 Calculator', '📝 Text Editor'],
 }
 
 THEME_COLORS = {
     # Existing themes
-    "green": {
-        "primary": "#00ff41",
-        "primary_dim": "#00ff4155",
-        "primary_glow": "#00ff4108",
-        "primary_dark": "#008822"
+    'green': {
+        'primary': '#00ff41',
+        'primary_dim': '#00ff4155',
+        'primary_glow': '#00ff4108',
+        'primary_dark': '#008822',
     },
-    "cyan": {
-        "primary": "#00ffff",
-        "primary_dim": "#00ffff55",
-        "primary_glow": "#00ffff08",
-        "primary_dark": "#008888"
+    'cyan': {
+        'primary': '#00ffff',
+        'primary_dim': '#00ffff55',
+        'primary_glow': '#00ffff08',
+        'primary_dark': '#008888',
     },
-    "amber": {
-        "primary": "#ffbf00",
-        "primary_dim": "#ffbf0055",
-        "primary_glow": "#ffbf0008",
-        "primary_dark": "#cc8800"
+    'amber': {
+        'primary': '#ffbf00',
+        'primary_dim': '#ffbf0055',
+        'primary_glow': '#ffbf0008',
+        'primary_dark': '#cc8800',
     },
-    "purple": {
-        "primary": "#8a2be2",
-        "primary_dim": "#8a2be255",
-        "primary_glow": "#8a2be208",
-        "primary_dark": "#5a1b92"
+    'purple': {
+        'primary': '#8a2be2',
+        'primary_dim': '#8a2be255',
+        'primary_glow': '#8a2be208',
+        'primary_dark': '#5a1b92',
     },
     # NEW THEMES - ADD THESE:
-    "red": {
-        "primary": "#ff2040",
-        "primary_dim": "#ff204055",
-        "primary_glow": "#ff204008",
-        "primary_dark": "#cc1833"
+    'red': {
+        'primary': '#ff2040',
+        'primary_dim': '#ff204055',
+        'primary_glow': '#ff204008',
+        'primary_dark': '#cc1833',
     },
-    "orange": {
-        "primary": "#ff6600",
-        "primary_dim": "#ff660055",
-        "primary_glow": "#ff660008",
-        "primary_dark": "#cc5200"
+    'orange': {
+        'primary': '#ff6600',
+        'primary_dim': '#ff660055',
+        'primary_glow': '#ff660008',
+        'primary_dark': '#cc5200',
     },
-    "pink": {
-        "primary": "#ff1493",
-        "primary_dim": "#ff149355",
-        "primary_glow": "#ff149308",
-        "primary_dark": "#cc1075"
+    'pink': {
+        'primary': '#ff1493',
+        'primary_dim': '#ff149355',
+        'primary_glow': '#ff149308',
+        'primary_dark': '#cc1075',
     },
-    "lime": {
-        "primary": "#32cd32",
-        "primary_dim": "#32cd3255",
-        "primary_glow": "#32cd3208",
-        "primary_dark": "#28a428"
+    'lime': {
+        'primary': '#32cd32',
+        'primary_dim': '#32cd3255',
+        'primary_glow': '#32cd3208',
+        'primary_dark': '#28a428',
     },
-    "blue": {
-        "primary": "#0080ff",
-        "primary_dim": "#0080ff55",
-        "primary_glow": "#0080ff08",
-        "primary_dark": "#0066cc"
+    'blue': {
+        'primary': '#0080ff',
+        'primary_dim': '#0080ff55',
+        'primary_glow': '#0080ff08',
+        'primary_dark': '#0066cc',
     },
-    "white": {
-        "primary": "#ffffff",
-        "primary_dim": "#ffffff55",
-        "primary_glow": "#ffffff08",
-        "primary_dark": "#cccccc"
-    }
+    'white': {
+        'primary': '#ffffff',
+        'primary_dim': '#ffffff55',
+        'primary_glow': '#ffffff08',
+        'primary_dark': '#cccccc',
+    },
 }
 
 SYSTEM_FONTS = {
-    "courier": "'Courier New', monospace",
-    "monaco": "'Monaco', monospace",
-    "consolas": "'Consolas', monospace"
+    'courier': "'Courier New', monospace",
+    'monaco': "'Monaco', monospace",
+    'consolas': "'Consolas', monospace",
 }
 
 
 # Window positioning configuration
 WINDOW_CONFIG = {
-    'ICON_GRID_SIZE': 120,      # Pixels between icon grid positions
-    'WINDOW_OFFSET_X': 150,     # Horizontal offset from icon to window
-    'WINDOW_OFFSET_Y': 50,      # Vertical offset from icon to window
-    'INITIAL_Z_INDEX': 100,     # Starting z-index for windows
-    'MAX_MINIMIZED': 10,        # Maximum minimized windows in taskbar
+    'ICON_GRID_SIZE': 120,  # Pixels between icon grid positions
+    'WINDOW_OFFSET_X': 150,  # Horizontal offset from icon to window
+    'WINDOW_OFFSET_Y': 50,  # Vertical offset from icon to window
+    'INITIAL_Z_INDEX': 100,  # Starting z-index for windows
+    'MAX_MINIMIZED': 10,  # Maximum minimized windows in taskbar
 }
 
 # Taskbar configuration
 TASKBAR_CONFIG = {
-    'BOTTOM_MARGIN': 40,        # Distance from bottom of screen
-    'ITEM_HEIGHT': 30,          # Height of each minimized window
-    'LEFT_MARGIN': 20,          # Distance from left edge
+    'BOTTOM_MARGIN': 40,  # Distance from bottom of screen
+    'ITEM_HEIGHT': 30,  # Height of each minimized window
+    'LEFT_MARGIN': 20,  # Distance from left edge
 }
+
 
 class WindowManager:
     """Central state manager for all desktop windows"""
@@ -156,7 +167,7 @@ class WindowManager:
 
     def create_window(self, name, content, icon_x, icon_y):
         """Creates a window and returns the complete window data structure"""
-        window_id = f"win-{name.replace(' ', '-').lower()}"
+        window_id = f'win-{name.replace(" ", "-").lower()}'
 
         # Check if window already exists
         if window_id in self.windows:
@@ -164,7 +175,7 @@ class WindowManager:
 
         # Smart positioning that scales with viewport
         base_x = min(icon_x * 100 + 50, 50)  # Never more than 50px from left
-        base_y = min(icon_y * 80 + 30, 80)   # Stagger vertically, max 80px from top
+        base_y = min(icon_y * 80 + 30, 80)  # Stagger vertically, max 80px from top
 
         # Create window data structure
         window_data = {
@@ -174,7 +185,7 @@ class WindowManager:
             'position': (base_x, base_y),
             'z_index': self.next_z_index,
             'maximized': False,
-            'item_type': 'folder' if name in ['Documents', 'Programs'] else 'program'
+            'item_type': 'folder' if name in ['Documents', 'Programs'] else 'program',
         }
 
         # Store in windows registry
@@ -252,7 +263,8 @@ class WindowManager:
         """Calculate taskbar position for minimized window"""
         return (
             TASKBAR_CONFIG['LEFT_MARGIN'],
-            TASKBAR_CONFIG['BOTTOM_MARGIN'] + (position * TASKBAR_CONFIG['ITEM_HEIGHT'])
+            TASKBAR_CONFIG['BOTTOM_MARGIN']
+            + (position * TASKBAR_CONFIG['ITEM_HEIGHT']),
         )
 
     def _reset_desktop(self):
@@ -262,7 +274,8 @@ class WindowManager:
         self.available_positions = set(range(WINDOW_CONFIG['MAX_MINIMIZED']))
         self.next_z_index = WINDOW_CONFIG['INITIAL_Z_INDEX']
         self.open_folders.clear()
-        print("Desktop state reset - all windows closed")
+        print('Desktop state reset - all windows closed')
+
 
 # Global state instance
 window_manager = WindowManager()

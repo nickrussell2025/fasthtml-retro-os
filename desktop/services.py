@@ -2,12 +2,10 @@
 Desktop Services - Incremental Migration
 Start by wrapping existing logic without changing it
 """
-from fasthtml.common import Style
-from desktop.state import ICON_POSITIONS, SYSTEM_FONTS, window_manager, settings_manager
-from desktop.components import CreateContent, DesktopIcon, Window, WindowIcon
 
 from desktop.components import CreateContent, DesktopIcon, Window
 from desktop.state import window_manager
+
 
 class DesktopService:
     def __init__(self):
@@ -23,7 +21,7 @@ class DesktopService:
 
         window = Window(window_data['name'], content)
 
-        if type == "folder":
+        if type == 'folder':
             updated_icon = DesktopIcon(name, type, oob_update=True)
             return window, updated_icon
         return window, None
@@ -31,12 +29,12 @@ class DesktopService:
     def close_window(self, window_id: str):
         """Clean up server data only"""
         closed_window_data = self.window_manager.close_window(window_id)
-        
-        if (closed_window_data and 
-            closed_window_data.get('item_type') == 'folder'):
+
+        if closed_window_data and closed_window_data.get('item_type') == 'folder':
             # The folder state is now closed, return updated icon
             return DesktopIcon(closed_window_data['name'], 'folder', oob_update=True)
         return None
+
 
 # Global instance
 desktop_service = DesktopService()
