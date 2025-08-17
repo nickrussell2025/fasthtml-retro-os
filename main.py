@@ -143,13 +143,37 @@ if __name__ == "__main__":
     import os
     import uvicorn
     
-    # Railway provides PORT as environment variable
+    # Environment detection
+    is_production = bool(os.environ.get("RAILWAY_ENVIRONMENT_NAME") or 
+                        os.environ.get("RENDER") or 
+                        os.environ.get("VERCEL") or
+                        os.environ.get("FLY_APP_NAME") or
+                        os.environ.get("ENVIRONMENT") == "production")
+    
+    # Port configuration
     port = int(os.environ.get("PORT", 8000))
     
-    # Must bind to 0.0.0.0 for Railway to route traffic
-    uvicorn.run(
-        "main:app",  # Replace "main" with your actual module name if different
-        host="0.0.0.0",
-        port=port,
-        reload=False  # Set to False for production
-    )
+    if is_production:
+        # Production configuration
+        uvicorn.run(
+            "main:app",
+            host="0.0.0.0",
+            port=port,
+            reload=False,
+            log_level="info",
+            access_log=True
+        )
+    else:
+        # Local development configuration
+        print(f"🚀 FastHTML Development Server")
+        print(f"📍 Local: http://127.0.0.1:{port}")
+        print(f"🌐 Network: http://0.0.0.0:{port}")
+        print(f"🔄 Hot reload: enabled")
+        
+        uvicorn.run(
+            "main:app",
+            host="0.0.0.0",
+            port=port,
+            reload=True,
+            log_level="debug"
+        )

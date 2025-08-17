@@ -1,40 +1,41 @@
 # programs/game_of_life/game.py
+
 class GameOfLife:
-    """Simplified Game of Life - no auto-run complexity"""
+    """Optimized Game of Life - using efficient neighbor calculation"""
     
     def __init__(self, width: int = 20, height: int = 15):
         self.width = width
         self.height = height
         self.generation = 0
         self.grid = [[False for _ in range(width)] for _ in range(height)]
-    
-    def get_neighbors(self, x: int, y: int) -> int:
-        """Count living neighbors for cell at (x, y)"""
-        count = 0
-        for dy in [-1, 0, 1]:
-            for dx in [-1, 0, 1]:
-                if dx == 0 and dy == 0:
-                    continue
-                
-                nx, ny = x + dx, y + dy
-                if 0 <= nx < self.width and 0 <= ny < self.height:
-                    if self.grid[ny][nx]:
-                        count += 1
-        return count
+        
+        # Pre-calculate neighbor offsets once
+        self.neighbor_offsets = [
+            (-1, -1), (-1, 0), (-1, 1),
+            (0, -1),           (0, 1),
+            (1, -1),  (1, 0),  (1, 1)
+        ]
     
     def step(self):
-        """Advance one generation using Conway's rules"""
-        new_grid = [[False for _ in range(self.width)] for _ in range(self.height)]
+        """Optimized step function - single pass, minimal allocations"""
+        # Pre-allocate the new grid
+        new_grid = [[False] * self.width for _ in range(self.height)]
         
+        # Single pass through the grid
         for y in range(self.height):
             for x in range(self.width):
-                neighbors = self.get_neighbors(x, y)
+                # Count neighbors inline
+                neighbors = 0
+                for dx, dy in self.neighbor_offsets:
+                    nx, ny = x + dx, y + dy
+                    # Bounds check and count in one condition
+                    if 0 <= nx < self.width and 0 <= ny < self.height and self.grid[ny][nx]:
+                        neighbors += 1
                 
-                if self.grid[y][x]:  # Living cell
-                    # Survive if 2 or 3 neighbors
-                    new_grid[y][x] = neighbors in [2, 3]
-                else:  # Dead cell
-                    # Birth if exactly 3 neighbors
+                # Apply rules directly
+                if self.grid[y][x]:
+                    new_grid[y][x] = neighbors in (2, 3)
+                else:
                     new_grid[y][x] = neighbors == 3
         
         self.grid = new_grid
@@ -47,7 +48,7 @@ class GameOfLife:
     
     def clear(self):
         """Clear all cells and reset generation"""
-        self.grid = [[False for _ in range(self.width)] for _ in range(self.height)]
+        self.grid = [[False] * self.width for _ in range(self.height)]
         self.generation = 0
     
     def get_live_cell_count(self) -> int:

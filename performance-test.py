@@ -55,9 +55,9 @@ class RetroOSPerformanceAnalyzer:
     def memory_test_server(self):
         """Test server's memory endpoint"""
         try:
-            response = requests.get(f"{self.base_url}/debug/memory")
+            response = requests.get(f"{self.base_url}/api/book/frankenstein")
             if response.status_code == 200:
-                return {"server_accessible": True, "debug_endpoint": "working"}
+                return {"server_accessible": True, "book_endpoint": "working"}
             else:
                 return {"server_accessible": False, "status": response.status_code}
         except Exception as e:
@@ -90,18 +90,24 @@ class RetroOSPerformanceAnalyzer:
             }
     
     def simulate_user_session(self, user_id):
-        """Simulate realistic user interaction"""
+        """Simulate realistic user interaction with focus on eReader"""
         session_results = []
         
+        # Mix of activities with heavy eReader usage
         endpoints = [
             ("/", "GET"),
+            ("/open", "POST", {"name": "eReader", "type": "program", "icon_x": 2, "icon_y": 1}),
+            ("/api/book/frankenstein", "GET"),  # Load the book
+            ("/ereader/page/1", "POST"),  # Navigate pages
+            ("/ereader/page/2", "POST"),
+            ("/ereader/page/3", "POST"),
+            ("/api/book/frankenstein", "GET"),  # Reload book (test caching)
+            ("/ereader/page/10", "POST"),
+            ("/ereader/page/20", "POST"),
+            ("/open", "POST", {"name": "Highlights", "type": "program", "icon_x": 3, "icon_y": 1}),
             ("/open", "POST", {"name": "Game of Life", "type": "program", "icon_x": 1, "icon_y": 1}),
             ("/gameoflife/random", "POST"),
             ("/gameoflife/step", "POST"),
-            ("/gameoflife/step", "POST"),
-            ("/gameoflife/toggle/5/5", "POST"),
-            ("/open", "POST", {"name": "eReader", "type": "program", "icon_x": 2, "icon_y": 1}),
-            ("/open", "POST", {"name": "Settings", "type": "program", "icon_x": 3, "icon_y": 1}),
         ]
         
         for endpoint_data in endpoints:
@@ -115,7 +121,11 @@ class RetroOSPerformanceAnalyzer:
             result["user_id"] = user_id
             session_results.append(result)
             
-            time.sleep(0.05 + (user_id * 0.01))  # Stagger users
+            # Simulate reading time for eReader pages
+            if "ereader/page" in endpoint:
+                time.sleep(0.1)  # Simulate quick page scan
+            else:
+                time.sleep(0.02)  # Quick action
             
         return session_results
     
@@ -126,6 +136,9 @@ class RetroOSPerformanceAnalyzer:
         
         # Initial memory snapshot
         initial_memory = self.get_memory_breakdown()
+        
+        # First request to warm up cache
+        self.single_request("/api/book/frankenstein", "GET")
         
         with ThreadPoolExecutor(max_workers=concurrent_users) as executor:
             futures = []
@@ -164,9 +177,26 @@ class RetroOSPerformanceAnalyzer:
         }
     
     def analyze_results(self, results):
-        """Analyze performance results"""
+        """Analyze performance results with endpoint breakdown"""
         successful_results = [r for r in results if r["success"]]
         response_times = [r["response_time"] for r in successful_results]
+        
+        # Analyze by endpoint
+        endpoint_stats = {}
+        for r in successful_results:
+            endpoint = r["endpoint"]
+            if endpoint not in endpoint_stats:
+                endpoint_stats[endpoint] = []
+            endpoint_stats[endpoint].append(r["response_time"])
+        
+        endpoint_averages = {}
+        for endpoint, times in endpoint_stats.items():
+            if times:
+                endpoint_averages[endpoint] = {
+                    "avg": statistics.mean(times),
+                    "count": len(times),
+                    "max": max(times)
+                }
         
         if not response_times:
             return {"error": "No successful requests"}
@@ -177,16 +207,17 @@ class RetroOSPerformanceAnalyzer:
             "success_rate": len(successful_results) / len(results) * 100,
             "avg_response_time": statistics.mean(response_times),
             "median_response_time": statistics.median(response_times),
-            "p95_response_time": sorted(response_times)[int(len(response_times) * 0.95)],
+            "p95_response_time": sorted(response_times)[int(len(response_times) * 0.95)] if len(response_times) > 1 else response_times[0],
             "max_response_time": max(response_times),
             "min_response_time": min(response_times),
-            "total_data_transferred": sum(r.get("size_bytes", 0) for r in successful_results)
+            "total_data_transferred": sum(r.get("size_bytes", 0) for r in successful_results),
+            "endpoint_stats": endpoint_averages
         }
     
     def run_comprehensive_analysis(self):
         """Run full performance and memory analysis"""
         print("=" * 80)
-        print("🔬 RETRO OS COMPREHENSIVE ANALYSIS")
+        print("🔬 RETRO OS COMPREHENSIVE ANALYSIS WITH EREADER FOCUS")
         print("=" * 80)
         
         # Check server connectivity
@@ -209,6 +240,8 @@ class RetroOSPerformanceAnalyzer:
             (15, 1, "Medium Load"),
             (30, 1, "Heavy Load")
         ]
+        
+        all_endpoint_stats = {}
         
         for users, iterations, description in test_scenarios:
             print(f"\n🎯 {description} ({users} users)")
@@ -236,6 +269,23 @@ class RetroOSPerformanceAnalyzer:
             if users > 0:
                 memory_per_user = memory_delta / users if memory_delta > 0 else 0
                 print(f"  Memory/User: {memory_per_user:.3f} MB")
+            
+            # Store endpoint stats for later analysis
+            all_endpoint_stats[description] = perf.get("endpoint_stats", {})
+        
+        # Endpoint-specific analysis
+        print("\n📈 ENDPOINT PERFORMANCE ANALYSIS")
+        print("-" * 50)
+        
+        # Focus on key endpoints
+        key_endpoints = ["/api/book/frankenstein", "/ereader/page/1", "/", "/gameoflife/step"]
+        
+        for endpoint in key_endpoints:
+            print(f"\n  {endpoint}:")
+            for scenario, stats in all_endpoint_stats.items():
+                if endpoint in stats:
+                    data = stats[endpoint]
+                    print(f"    {scenario}: {data['avg']:.1f}ms avg, {data['max']:.1f}ms max ({data['count']} calls)")
         
         print("\n" + "=" * 80)
         print("🏆 OPTIMIZATION RECOMMENDATIONS")
@@ -243,7 +293,7 @@ class RetroOSPerformanceAnalyzer:
         
         # Analyze for optimization opportunities
         final_state = self.get_memory_breakdown()
-        self.print_optimization_recommendations(final_state)
+        self.print_optimization_recommendations(final_state, all_endpoint_stats)
     
     def print_memory_analysis(self, memory_data, label):
         """Print detailed memory analysis"""
@@ -263,8 +313,8 @@ class RetroOSPerformanceAnalyzer:
             for module in memory_data['heavy_modules']:
                 print(f"    ⚠️  {module}")
     
-    def print_optimization_recommendations(self, memory_data):
-        """Print optimization recommendations"""
+    def print_optimization_recommendations(self, memory_data, endpoint_stats):
+        """Print optimization recommendations with endpoint analysis"""
         rss_mb = memory_data['rss_mb']
         modules = memory_data['modules']
         heavy_modules = memory_data['heavy_modules']
@@ -289,6 +339,27 @@ class RetroOSPerformanceAnalyzer:
                 print(f"     • {module}")
         else:
             print(f"  ✅ No heavy data science modules detected")
+        
+        # Check if book endpoint is being cached effectively
+        print(f"\n📚 EREADER CACHING ANALYSIS:")
+        
+        # Look for the book endpoint in different load scenarios
+        book_times = []
+        for scenario, stats in endpoint_stats.items():
+            if "/api/book/frankenstein" in stats:
+                avg_time = stats["/api/book/frankenstein"]["avg"]
+                book_times.append((scenario, avg_time))
+                
+        if book_times:
+            first_time = book_times[0][1]
+            last_time = book_times[-1][1] if len(book_times) > 1 else first_time
+            
+            if first_time > 10 and last_time < 5:
+                print(f"  ✅ Book caching appears to be working ({first_time:.1f}ms → {last_time:.1f}ms)")
+            elif first_time < 5:
+                print(f"  ✅ Book loads very fast ({first_time:.1f}ms) - caching likely working")
+            else:
+                print(f"  ⚠️  Book may not be cached effectively ({first_time:.1f}ms avg)")
         
         # Scaling projection
         memory_per_100_users = rss_mb + (rss_mb * 0.02)  # Estimate 2% growth per 100 users

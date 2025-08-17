@@ -1,432 +1,497 @@
-class EReader {
-    constructor() {        
-        this.paragraphs = [];
+// ============================================
+// STATE MANAGEMENT - Handles all localStorage and state
+// ============================================
+class ReaderState {
+   constructor(userId) {
+       this.userId = userId;
+       this.currentPage = 0;
+       this.savedPosition = 0;
+       this.highlights = [];
+       this.currentChapter = { name: 'Unknown', index: 0 };
+       this.saveTimer = null;
+       this.load();
+   }
+   
+   load() {
+       try {
+           const highlights = localStorage.getItem(`ereader-highlights-${this.userId}`);
+           if (highlights) {
+               this.highlights = JSON.parse(highlights);
+           }
+           
+           const savedPage = localStorage.getItem(`ereader-page-${this.userId}`);
+           const savedPosition = localStorage.getItem(`ereader-position-${this.userId}`);
+           
+           if (savedPage) this.currentPage = parseInt(savedPage);
+           if (savedPosition) this.savedPosition = parseInt(savedPosition);
+           
+           console.log('📖 Loaded state:', { 
+               page: this.currentPage, 
+               position: this.savedPosition,
+               highlights: this.highlights.length 
+           });
+       } catch (e) {
+           console.error('Failed to load state:', e);
+       }
+   }
+
+   save(textPosition) {
+       if (this.saveTimer) {
+           clearTimeout(this.saveTimer);
+       }
+       
+       this.saveTimer = setTimeout(() => {
+           this._performSave(textPosition);
+           this.saveTimer = null;
+       }, 500);
+   }
+   
+   saveNow(textPosition) {
+       if (this.saveTimer) {
+           clearTimeout(this.saveTimer);
+           this.saveTimer = null;
+       }
+       this._performSave(textPosition);
+   }
+   
+   _performSave(textPosition) {
+       try {
+           this.savedPosition = textPosition;
+           
+           localStorage.setItem(`ereader-page-${this.userId}`, this.currentPage);
+           localStorage.setItem(`ereader-position-${this.userId}`, textPosition);
+           localStorage.setItem(`ereader-highlights-${this.userId}`, JSON.stringify(this.highlights));
+           localStorage.setItem('frankenstein-highlights', JSON.stringify(this.highlights));
+           
+           console.log('💾 Saved state:', { 
+               page: this.currentPage, 
+               position: textPosition,
+               highlights: this.highlights.length 
+           });
+       } catch (e) {
+           console.error('Failed to save:', e);
+       }
+   }
+   
+   updateProgress(position, totalLength) {
+       if (!totalLength) return;
+       
+       const percent = (position / totalLength) * 100;
+       localStorage.setItem(`ereader-progress-percent-${this.userId}`, percent.toFixed(1));
+       
+       const bookBar = document.getElementById('book-progress-fill');
+       if (bookBar) bookBar.style.width = `${percent}%`;
+       
+       console.log('📊 Progress:', percent.toFixed(1) + '%');
+   }
+   
+   toggleHighlight(paragraphId, paragraphText) {
+       const index = this.highlights.findIndex(h => h.id === paragraphId);
+       
+       if (index >= 0) {
+           this.highlights.splice(index, 1);
+           console.log('🖍️ Removed highlight:', paragraphId);
+       } else {
+           this.highlights.push({
+               id: paragraphId,
+               text: paragraphText,
+               timestamp: new Date().toISOString(),
+               chapter: this.currentChapter
+           });
+           console.log('🖍️ Added highlight:', paragraphId);
+       }
+   }
+}
+
+// ============================================
+// BOOK LOADER - Handles text processing and pagination
+// ============================================
+class BookLoader {
+    constructor() {
         this.text = '';
         this.pages = [];
-        this.userId = this.getOrCreateUserId();
-        this.highlights = this.loadHighlights();
-        this.load();
-        this.setupBasicHighlighting();
-        this.currentChapter = { name: 'Unknown', index: 0 };
+        this.paragraphs = [];
+        this.chapters = [];
+        this.isLoaded = false;
     }
+    
+    async loadBook() {
+        try {
+            console.log('📚 Loading book...');
+            const response = await fetch('/api/book/frankenstein');
+            if (!response.ok) throw new Error('Failed to load book');
+            
+            const raw = await response.text();
+            this.processText(raw);
+            this.findChapters();
+            this.isLoaded = true;
+            
+            console.log('📚 Book loaded:', {
+                length: this.text.length,
+                paragraphs: this.paragraphs.length,
+                chapters: this.chapters.length
+            });
+        } catch (e) {
+            console.error('Failed to load book:', e);
+            throw e;
+        }
+    }
+    
+    processText(raw) {
+        const start = raw.indexOf('*To Mrs. Saville, England.*');
+        
+        // Single chain of replacements
+        this.text = raw.substring(start > -1 ? start : 0)
+            .replace(/<[^>]*>/g, '')
+            .replace(/&(mdash|#8212);/g, '—')
+            .replace(/&(nbsp|#160);/g, ' ')
+            .replace(/&(quot|ldquo|rdquo|#8220|#8221);/g, '"')
+            .replace(/&(lsquo|rsquo|#8216|#8217);/g, "'")
+            .replace(/&(amp|#38);/g, '&')
+            .replace(/&(hellip|#8230);/g, '...')
+            .replace(/\r?\n/g, '\n')
+            .replace(/([a-zA-Z,;:.])\n([a-zA-Z])/g, '$1 $2')
+            .replace(/\n{2,}/g, '\n\n')
+            .trim();
+        
+        this.paragraphs = this.text.split('\n\n').map((text, i) => ({
+            id: `p_${i.toString().padStart(4, '0')}`,
+            text: text.trim()
+        }));
+    }
+    
+    findChapters() {
+        // Check cache
+        const cached = localStorage.getItem('book-chapters-cache');
+        if (cached) {
+            this.chapters = JSON.parse(cached);
+            return;
+        }
+        
+        // Find all chapter/letter markers
+        const markers = [];
+        [/Letter \d+/g, /Chapter \d+/g].forEach(pattern => {
+            let match;
+            while ((match = pattern.exec(this.text)) !== null) {
+                markers.push({ name: match[0], pos: match.index });
+            }
+        });
+        
+        // Sort and create boundaries
+        markers.sort((a, b) => a.pos - b.pos);
+        this.chapters = markers.map((m, i) => ({
+            ...m,
+            endPos: markers[i + 1]?.pos || this.text.length
+        }));
+        
+        localStorage.setItem('book-chapters-cache', JSON.stringify(this.chapters));
+    }
+    
+    generatePages(startPos = 0, count = 20) {
+        const container = document.querySelector('.ereader-page');
+        if (!container) return 0;
+        
+        // If starting fresh, clear pages
+        if (startPos === 0) {
+            this.pages = [];
+        }
+        
+        const remainingText = this.text.substring(startPos);
+        const words = remainingText.split(' ');
+        let wordIndex = 0;
+        let pagesAdded = 0;
+        
+        while (wordIndex < words.length && pagesAdded < count) {
+            let currentPageText = '';
+            
+            // Try adding words in chunks first for efficiency
+            while (wordIndex < words.length) {
+                // Grab a chunk of words (start with 20)
+                const chunkSize = Math.min(20, words.length - wordIndex);
+                const wordChunk = words.slice(wordIndex, wordIndex + chunkSize);
+                const testText = currentPageText + (currentPageText ? ' ' : '') + wordChunk.join(' ');
+                
+                container.innerHTML = this.formatText(testText, true);
+                
+                // If it fits, add the chunk
+                if (container.scrollHeight <= container.clientHeight + 5) {
+                    currentPageText = testText;
+                    wordIndex += chunkSize;
+                } else {
+                    // Chunk doesn't fit, add word by word
+                    if (chunkSize === 1) {
+                        // Even a single word doesn't fit, save current page
+                        if (currentPageText) {
+                            this.pages.push(currentPageText);
+                            pagesAdded++;
+                            currentPageText = words[wordIndex];
+                            wordIndex++;
+                        } else {
+                            // Single word is too big for empty page (shouldn't happen)
+                            currentPageText = words[wordIndex];
+                            wordIndex++;
+                        }
+                        break; // Start new page
+                    } else {
+                        // Try adding word by word from the chunk
+                        for (let i = 0; i < chunkSize; i++) {
+                            const singleTest = currentPageText + (currentPageText ? ' ' : '') + words[wordIndex];
+                            container.innerHTML = this.formatText(singleTest, true);
+                            
+                            if (container.scrollHeight > container.clientHeight + 5) {
+                                // This word makes it overflow, save page
+                                if (currentPageText) {
+                                    this.pages.push(currentPageText);
+                                    pagesAdded++;
+                                    currentPageText = '';
+                                }
+                                break; // Start new page
+                            } else {
+                                currentPageText = singleTest;
+                                wordIndex++;
+                            }
+                        }
+                        break; // After word-by-word, start fresh
+                    }
+                }
+                
+                // If we've added enough pages, stop
+                if (pagesAdded >= count) break;
+            }
+            
+            // Don't forget remaining text on last page
+            if (currentPageText && pagesAdded < count && wordIndex >= words.length) {
+                this.pages.push(currentPageText);
+                pagesAdded++;
+            }
+        }
+        
+        console.log('📄 Generated', pagesAdded, 'pages. Total:', this.pages.length);
+        return pagesAdded;
+    }
+    
+    formatText(text, testing = false) {
+        return text.split('\n\n')
+            .filter(p => p.trim())
+            .map(p => {
+                const para = this.findParagraph(p.trim());
+                const highlighted = window.ereaderInstance?.state?.highlights.some(h => h.id === para?.id);
+                
+                return `<p data-id="${para?.id || 'unknown'}" style="
+                    margin: 0 0 0.5em 0;
+                    text-align: ${testing ? 'left' : 'justify'};
+                    line-height: 1.4;
+                    ${highlighted ? 'background: rgba(255,255,0,0.3);' : ''}
+                ">${p.trim().replace(/\n/g, ' ').replace(/_(.*?)_/g, '<em>$1</em>')}</p>`;
+            }).join('');
+    }
+    
+    findParagraph(text) {
+        const preview = text.substring(0, 50);
+        return this.paragraphs.find(p => p.text.includes(preview));
+    }
+    
+    getTextPosition(pageIndex) {
+        let pos = 0;
+        for (let i = 0; i < pageIndex && i < this.pages.length; i++) {
+            pos += this.pages[i].length + 1;
+        }
+        return pos;
+    }
+    
+    findPageForPosition(position) {
+        for (let i = 0; i < this.pages.length; i++) {
+            const start = this.getTextPosition(i);
+            const end = this.getTextPosition(i + 1);
+            if (position >= start && position < end) {
+                return i;
+            }
+        }
+        return 0;
+    }
+    
+    getCurrentChapter(position) {
+        const chapter = this.chapters.find(c => position >= c.pos && position < c.endPos);
+        return chapter ? { name: chapter.name, index: this.chapters.indexOf(chapter) } : null;
+    }
+}
 
+// ============================================
+// MAIN EREADER CLASS - Orchestrates everything
+// ============================================
+class EReader {
+    constructor() {
+        console.log('🚀 Initializing EReader...');
+        this.userId = this.getOrCreateUserId();
+        this.state = new ReaderState(this.userId);
+        this.loader = new BookLoader();
+        this.initialize();
+    }
+    
     getOrCreateUserId() {
         let userId = localStorage.getItem('retro-os-user-id');
         if (!userId) {
             userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
             localStorage.setItem('retro-os-user-id', userId);
+            console.log('👤 Created user:', userId);
+        } else {
+            console.log('👤 Existing user:', userId);
         }
         return userId;
     }
-
-    savePage() {
-        localStorage.setItem(`ereader-page-${this.userId}`, this.currentPage);
-    }
-
-    updateProgressBar() {
-        if (!this.text || this.pages.length === 0) return;
-        
-        const currentPosition = this.getTextPosition(this.currentPage);
-        const totalTextLength = this.text.length;
-        
-        const bookProgressPercent = (currentPosition / totalTextLength) * 100;
-        const chapterProgressPercent = this.calculateChapterProgress(currentPosition);
-        
-        localStorage.setItem(`ereader-progress-percent-${this.userId}`, bookProgressPercent.toFixed(1));
-        
-        const bookProgressBar = document.getElementById('book-progress-fill');
-        const chapterProgressBar = document.getElementById('chapter-progress-fill');
-        
-        if (bookProgressBar) {
-            bookProgressBar.style.width = `${bookProgressPercent}%`;
-        }
-        if (chapterProgressBar) {
-            chapterProgressBar.style.width = `${chapterProgressPercent}%`;
-        }
-    }
-
-    loadPage() {
-        return parseInt(localStorage.getItem(`ereader-page-${this.userId}`) || '0');
-    }
-
-    saveHighlights() {
-        localStorage.setItem(`ereader-highlights-${this.userId}`, JSON.stringify(this.highlights));
-    }
-
-    loadHighlights() {
-        const saved = localStorage.getItem(`ereader-highlights-${this.userId}`);
-        return saved ? JSON.parse(saved) : [];
-    }
-
-    initializeChapterBoundaries() {
-        const cacheKey = `chapter-boundaries-${this.userId}-frankenstein`;
-        const cached = localStorage.getItem(cacheKey);
-        
-        if (cached) {
-            this.chapterBoundaries = JSON.parse(cached);
-            return;
-        }
-        
-        this.chapterBoundaries = this.calculateChapterBoundaries();
-        localStorage.setItem(cacheKey, JSON.stringify(this.chapterBoundaries));
-    }
-
-    calculateChapterBoundaries() {
-        const boundaries = [];
-        const chapterPatterns = [/Letter\s+(\d+)/gi, /Chapter\s+(\d+)/gi];
-        
-        let lastEnd = 0;
-        let chapterIndex = 0;
-        
-        for (const pattern of chapterPatterns) {
-            let match;
-            pattern.lastIndex = 0;
+    
+    async initialize() {
+        try {
+            await this.loader.loadBook();
             
-            while ((match = pattern.exec(this.text)) !== null) {
-                if (match.index > lastEnd) {
-                    boundaries.push({
-                        name: match[0],
-                        index: chapterIndex++,
-                        startPos: lastEnd,
-                        endPos: match.index
-                    });
-                    lastEnd = match.index;
+            // Generate pages from beginning for consistency
+            if (this.state.savedPosition > 0) {
+                // Generate enough pages to reach saved position
+                while (this.loader.getTextPosition(this.loader.pages.length) < this.state.savedPosition + 2000) {
+                    const generated = this.loader.generatePages(
+                        this.loader.getTextPosition(this.loader.pages.length)
+                    );
+                    if (generated === 0) break;
                 }
-            }
-        }
-        
-        if (lastEnd < this.text.length) {
-            boundaries.push({
-                name: "Final Chapter",
-                index: chapterIndex,
-                startPos: lastEnd,
-                endPos: this.text.length
-            });
-        }
-        
-        return boundaries;
-    }
-
-    findCurrentChapter(currentPosition) {
-        if (!this.chapterBoundaries) return null;
-        return this.chapterBoundaries.find(chapter => 
-            currentPosition >= chapter.startPos && currentPosition < chapter.endPos
-        );
-    }
-
-    calculateChapterProgress(currentPosition) {
-        const chapter = this.findCurrentChapter(currentPosition);
-        if (!chapter) return 0;
-        
-        const chapterLength = chapter.endPos - chapter.startPos;
-        const positionInChapter = currentPosition - chapter.startPos;
-        
-        return Math.min(100, (positionInChapter / chapterLength) * 100);
-    }
-    
-    async load() {
-        const response = await fetch('/api/book/frankenstein');
-        const raw = await response.text();
-        
-        this.processBookText(raw);
-        this.initializeChapterBoundaries();
-        this.splitNextChunk();
-        
-        const savedPage = this.loadPage();
-        
-        this.currentPage = savedPage;
-        
-        this.isLoaded = true;
-        this.show();
-        this.setup();
-    }
-
-    processBookText(raw) {
-        const start = raw.indexOf('*To Mrs. Saville, England.*');
-        
-        this.text = raw.substring(start > -1 ? start : 0)
-            .replace(/\r\n/g, '\n')
-            .replace(/([a-zA-Z,;:.])\n([a-zA-Z])/g, '$1 $2')
-            .replace(/\n\n+/g, '\n\n')
-            .trim();
-        
-        // Create paragraphs with IDs for fragment matching
-        this.paragraphs = this.text.split('\n\n').map((text, index) => ({
-            id: `frank_p_${index.toString().padStart(3, '0')}`,
-            text: text.trim()
-        }));
-    }
-    
-    splitNextChunk() {
-        const container = document.querySelector('.ereader-page');
-        const startPos = this.getTextPosition(this.pages.length);
-        const remainingText = this.text.substring(startPos);
-        const words = remainingText.split(' ');
-        
-        let currentPageText = '';
-        let wordIndex = 0;
-        let pagesAdded = 0;
-        
-        while (wordIndex < words.length && pagesAdded < 20) {
-            const chunkSize = Math.min(20, words.length - wordIndex);
-            const wordChunk = words.slice(wordIndex, wordIndex + chunkSize);
-            const testText = currentPageText + (currentPageText ? ' ' : '') + wordChunk.join(' ');
-            
-            container.innerHTML = this.formatText(testText, true);            
-            if (container.scrollHeight > container.clientHeight + 25 && currentPageText) {
-                if (chunkSize === 1) {
-                    this.pages.push(currentPageText);
-                    currentPageText = words[wordIndex];
-                    pagesAdded++;
-                    wordIndex++;
-                } else {
-                    while (wordIndex < words.length) {
-                        const singleWordTest = currentPageText + (currentPageText ? ' ' : '') + words[wordIndex];
-                        console.log(`SINGLE WORD TEST: "${words[wordIndex]}", LENGTH: ${singleWordTest.length}`);
-                        container.innerHTML = this.formatText(singleWordTest, true);                        
-                        if (container.scrollHeight > container.clientHeight + 25) {
-                            this.pages.push(currentPageText);
-                            currentPageText = words[wordIndex];
-                            pagesAdded++;
-                            wordIndex++;
-                            break;
-                        } else {
-                            currentPageText = singleWordTest;
-                            wordIndex++;
-                        }
-                    }
-                }
+                this.state.currentPage = this.loader.findPageForPosition(this.state.savedPosition);
+                console.log('📍 Restored to page', this.state.currentPage);
             } else {
-                currentPageText = testText;
-                wordIndex += chunkSize;
-            }
-        }
-        
-        if (currentPageText && pagesAdded < 20) {
-            this.pages.push(currentPageText);
-        }
-    }
-
-    formatText(text, testing = false) {
-        return text.split('\n\n')
-            .filter(p => p.trim())
-            .map(p => {
-                const correctParagraphId = this.findParagraphIdForFragment(p.trim());
-                const isHighlighted = this.highlights.some(h => h.id === correctParagraphId);
-                const bgStyle = isHighlighted ? 'background-color: rgba(255, 255, 0, 0.3);' : '';
-                
-                const formattedText = p.trim()
-                    .replace(/\n/g, ' ')
-                    .replace(/_(.*?)_/g, '<em>$1</em>');
-                
-                // Use left-align for testing, justify for display
-                const textAlign = testing ? 'left' : 'justify';
-                
-                return `<p data-id="${correctParagraphId}" style="margin: 0 0 0.5em 0; text-align: ${textAlign}; line-height: 1.4; ${bgStyle}">${formattedText}</p>`;
-            }).join('');
-    }
-
-    findParagraphIdForFragment(fragment) {
-        for (const paragraph of this.paragraphs) {
-            if (paragraph.text.includes(fragment.substring(0, 50))) {
-                return paragraph.id;
-            }
-        }
-        return 'unknown';
-    }
-    
-    getTextPosition(pageIndex) {
-        let position = 0;
-        for (let i = 0; i < pageIndex; i++) {
-            if (this.pages[i]) {
-                position += this.pages[i].length + 1;
-            }
-        }
-        return position;
-    }
-    
-    show() {
-        if (this.currentPage >= this.pages.length) {
-            this.currentPage = 0;
-        }
-        if (this.currentPage < 0) {
-            this.currentPage = 0;
-        }
-        
-        if (this.currentPage >= this.pages.length - 2) {
-            this.splitNextChunk();
-        }
-        
-        const container = document.querySelector('.ereader-page');
-        if (!container) {
-            console.error('EReader: Container not found');
-            return;
-        }
-        
-        const pageText = this.pages[this.currentPage] || '';
-        container.innerHTML = this.formatText(pageText, false);
-        this.updateCurrentChapter();
-        
-        const pageInfo = document.querySelector('.ereader-nav span');
-        if (pageInfo) pageInfo.textContent = `Page ${this.currentPage + 1}`;
-        
-        const prevBtn = document.querySelector('.ereader-nav button:first-child');
-        const nextBtn = document.querySelector('.ereader-nav button:last-child');
-        
-        if (prevBtn) prevBtn.disabled = this.currentPage === 0;
-        if (nextBtn) nextBtn.disabled = false;
-
-        this.savePage();
-        this.updateProgressBar();
-
-    }
-    
-    setup() {
-        const prevBtn = document.querySelector('.ereader-nav button:first-child');
-        const nextBtn = document.querySelector('.ereader-nav button:last-child');
-        
-        if (nextBtn) nextBtn.onclick = () => {
-            this.currentPage++;
-            this.show();
-        };
-        
-        if (prevBtn) prevBtn.onclick = () => {
-            if (this.currentPage > 0) {
-                this.currentPage--;
-                this.show();
-            }
-        };
-    }
-
-    setupBasicHighlighting() {
-        document.addEventListener('click', (e) => {
-            const paragraph = e.target.closest('p[data-id]');
-            if (!paragraph || !paragraph.closest('.ereader-page')) return;
-            
-            const paragraphId = paragraph.getAttribute('data-id');
-            
-            if (this.highlights.some(h => h.id === paragraphId)) {
-                this.highlights = this.highlights.filter(h => h.id !== paragraphId);
-            } else {
-                const enrichedHighlight = this.createEnrichedHighlight(paragraphId);
-                this.highlights.push(enrichedHighlight);
+                this.loader.generatePages(0);
+                this.state.currentPage = 0;
             }
             
-            this.saveHighlights();
-            this.refreshHighlights();
-        });
-    }
-
-    createEnrichedHighlight(paragraphId) {
-        const paragraph = this.paragraphs.find(p => p.id === paragraphId);
-        if (!paragraph) return null;
-        
-        return {
-            id: paragraphId,
-            text: paragraph.text,
-            timestamp: new Date().toISOString(),
-            chapter: this.detectChapterForParagraph(paragraph),
-            globalIndex: this.paragraphs.indexOf(paragraph),
-            preview: paragraph.text.substring(0, 100) + '...'
-        };
-    }
-
-    detectChapterForParagraph(paragraph) {
-        return this.currentChapter;
-    }
-
-    parseChapterNumber(roman) {
-        const romanNumerals = { I: 1, II: 2, III: 3, IV: 4, V: 5, VI: 6, VII: 7, VIII: 8, IX: 9, X: 10 };
-        return romanNumerals[roman] || parseInt(roman) || 0;
-    }
-
-    updateCurrentChapter() {
-        const pageText = this.pages[this.currentPage] || '';
-        const detected = this.detectChapterInText(pageText);
-        if (detected.name !== 'Unknown') {
-            this.currentChapter = detected;
+            this.render();
+            this.setupEventHandlers();
+            console.log('✅ EReader ready');
+        } catch (e) {
+            console.error('❌ Initialization failed:', e);
+            this.showError('Failed to load book. Please refresh.');
         }
     }
-
-    detectChapterInText(text) {
-        // Look for letter headers first
-        if (text.includes('Letter 1') && text.includes('_To Mrs. Saville, England._')) return { name: 'Letter 1', index: 1 };
-        if (text.includes('Letter 2') && text.includes('_To Mrs. Saville, England._')) return { name: 'Letter 2', index: 2 };
-        if (text.includes('Letter 3') && text.includes('_To Mrs. Saville, England._')) return { name: 'Letter 3', index: 3 };
-        if (text.includes('Letter 4') && text.includes('_To Mrs. Saville, England._')) return { name: 'Letter 4', index: 4 };
-        
-        // Look for chapter headers
-        const chapterMatch = text.match(/Chapter\s+(\d+)/i);
-        if (chapterMatch) {
-            return { name: `Chapter ${chapterMatch[1]}`, index: parseInt(chapterMatch[1]) + 4 };
-        }
-        
-        return { name: 'Unknown', index: 0 };
-    }
-
-    exportHighlights() {
-        return {
-            book: 'frankenstein',
-            user: this.userId,
-            timestamp: new Date().toISOString(),
-            total_highlights: this.highlights.length,
-            highlights: this.highlights.sort((a, b) => a.globalIndex - b.globalIndex)
-        };
-    }
-
-    refreshHighlights() {
+    
+    render() {
         const container = document.querySelector('.ereader-page');
         if (!container) return;
         
-        const pageText = this.pages[this.currentPage] || '';
-        container.innerHTML = this.formatText(pageText, false);
+        // Ensure we have enough pages ahead
+        if (this.state.currentPage >= this.loader.pages.length - 2) {
+            this.loader.generatePages(
+                this.loader.getTextPosition(this.loader.pages.length)
+            );
+        }
+        
+        // Batch all DOM updates
+        requestAnimationFrame(() => {
+            // Render current page
+            const pageText = this.loader.pages[this.state.currentPage] || '';
+            container.innerHTML = this.loader.formatText(pageText);
+            
+            // Update all UI elements at once
+            const pageInfo = document.querySelector('.ereader-nav span');
+            const [prevBtn, nextBtn] = document.querySelectorAll('.ereader-nav button');
+            
+            if (pageInfo) pageInfo.textContent = `Page ${this.state.currentPage + 1}`;
+            if (prevBtn) prevBtn.disabled = this.state.currentPage === 0;
+            if (nextBtn) nextBtn.disabled = false;
+        });
+        
+        // Save state (debounced)
+        const position = this.loader.getTextPosition(this.state.currentPage);
+        this.state.save(position);
+        this.state.updateProgress(position, this.loader.text.length);
+        
+        // Update chapter
+        const chapter = this.loader.getCurrentChapter(position);
+        if (chapter) {
+            this.state.currentChapter = chapter;
+        }
     }
-    reconnectDOM() {
-        // Reinitialize for new window
-        this.setup();
-        this.show();
-        console.log('EReader reconnected to new window');
+    
+    updateUI() {
+        const pageInfo = document.querySelector('.ereader-nav span');
+        const [prevBtn, nextBtn] = document.querySelectorAll('.ereader-nav button');
+        
+        if (pageInfo) pageInfo.textContent = `Page ${this.state.currentPage + 1}`;
+        if (prevBtn) prevBtn.disabled = this.state.currentPage === 0;
+        if (nextBtn) nextBtn.disabled = false;
+    }
+    
+    setupEventHandlers() {
+        const [prevBtn, nextBtn] = document.querySelectorAll('.ereader-nav button');
+        
+        if (nextBtn) nextBtn.onclick = () => {
+            this.state.currentPage++;
+            this.render();
+        };
+        
+        if (prevBtn) prevBtn.onclick = () => {
+            if (this.state.currentPage > 0) {
+                this.state.currentPage--;
+                this.render();
+            }
+        };
+        
+        // Highlighting
+        document.addEventListener('click', (e) => {
+            const p = e.target.closest('p[data-id]');
+            if (!p || !p.closest('.ereader-page')) return;
+            
+            const id = p.getAttribute('data-id');
+            const para = this.loader.paragraphs.find(p => p.id === id);
+            
+            if (para) {
+                this.state.toggleHighlight(id, para.text);
+                this.state.saveNow(this.loader.getTextPosition(this.state.currentPage));
+                this.render();
+            }
+        });
+    }
+    
+    showError(message) {
+        const container = document.querySelector('.ereader-page');
+        if (container) {
+            container.innerHTML = `<p style="color: red; text-align: center;">${message}</p>`;
+        }
+    }
+    
+    reconnect() {
+        // For HTMX navigation - reconnect to new DOM
+        console.log('🔄 Reconnecting to DOM');
+        this.setupEventHandlers();
+        this.render();
     }
 }
 
-// Auto-initialize when HTMX loads new content
-function initEReaders() {
-    const containers = document.querySelectorAll('.ereader-page');
-    if (containers.length > 0) {
-        // Create new instance for each new window, but only one per session
+// ============================================
+// INITIALIZATION
+// ============================================
+window.ereaderInstance = null;
+
+function initEReader() {
+    console.log('🎬 Init check...');
+    const container = document.querySelector('.ereader-page');
+    
+    if (container) {
+        console.log('📚 EReader container found');
         if (window.ereaderInstance) {
-            // Reconnect existing instance to new DOM
-            window.ereaderInstance.reconnectDOM();
+            window.ereaderInstance.reconnect();
         } else {
             window.ereaderInstance = new EReader();
         }
-        console.log('EReader instance ready');
     }
     
-    // Add library initialization
+    // Library view
     if (document.querySelector('.library-container')) {
         initLibrary();
     }
 }
 
-// Run on page load and when HTMX adds new content
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initEReaders);
-} else {
-    initEReaders();
-}
-
-if (typeof htmx !== 'undefined') {
-    htmx.onLoad(initEReaders);
-}
-
-// Library functions - add at end of static/js/ereader.js
-function populateLibraryProgress() {
+function initLibrary() {
     const userId = localStorage.getItem('retro-os-user-id');
     if (!userId) return;
     
-    const progressKey = `ereader-progress-percent-${userId}`;
-    const progress = parseFloat(localStorage.getItem(progressKey) || '0');
+    const progress = parseFloat(localStorage.getItem(`ereader-progress-percent-${userId}`) || '0');
+    console.log('📊 Library progress:', progress.toFixed(1) + '%');
     
     const progressLabel = document.getElementById('progress-frankenstein');
     const progressBar = document.getElementById('progress-bar-frankenstein');
@@ -437,7 +502,27 @@ function populateLibraryProgress() {
     if (actionBtn && progress > 0) actionBtn.textContent = 'Continue Reading';
 }
 
-function initLibrary() {
-    console.log('Library interface loaded');
-    populateLibraryProgress();
+// Initialize on load
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initEReader);
+} else {
+    initEReader();
 }
+
+// HTMX integration
+if (typeof htmx !== 'undefined') {
+    htmx.onLoad(initEReader);
+}
+
+// Debug helper
+window.debugEReader = () => window.ereaderInstance ? {
+    state: {
+        page: window.ereaderInstance.state.currentPage,
+        position: window.ereaderInstance.state.savedPosition,
+        highlights: window.ereaderInstance.state.highlights.length
+    },
+    loader: {
+        pages: window.ereaderInstance.loader.pages.length,
+        chapters: window.ereaderInstance.loader.chapters.length
+    }
+} : 'No reader instance';

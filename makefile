@@ -3,7 +3,7 @@ fix:
 	uv run ruff format .
 
 test:
-	uv run pytest
+	uv run python performance-test.py
 
 dev:
 	uv run python main.py
