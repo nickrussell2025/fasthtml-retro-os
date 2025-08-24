@@ -2,104 +2,124 @@
 // STATE MANAGEMENT - Handles all localStorage and state
 // ============================================
 class ReaderState {
-   constructor(userId) {
-       this.userId = userId;
-       this.currentPage = 0;
-       this.savedPosition = 0;
-       this.highlights = [];
-       this.currentChapter = { name: 'Unknown', index: 0 };
-       this.saveTimer = null;
-       this.load();
-   }
-   
-   load() {
-       try {
-           const highlights = localStorage.getItem(`ereader-highlights-${this.userId}`);
-           if (highlights) {
-               this.highlights = JSON.parse(highlights);
-           }
-           
-           const savedPage = localStorage.getItem(`ereader-page-${this.userId}`);
-           const savedPosition = localStorage.getItem(`ereader-position-${this.userId}`);
-           
-           if (savedPage) this.currentPage = parseInt(savedPage);
-           if (savedPosition) this.savedPosition = parseInt(savedPosition);
-           
-           console.log('📖 Loaded state:', { 
-               page: this.currentPage, 
-               position: this.savedPosition,
-               highlights: this.highlights.length 
-           });
-       } catch (e) {
-           console.error('Failed to load state:', e);
-       }
-   }
+    constructor(userId) {
+        this.userId = userId;
+        this.currentPage = 0;
+        this.savedPosition = 0;
+        this.highlights = [];
+        this.currentChapter = { name: 'Unknown', index: 0 };
+        this.saveTimer = null;
+        this.load();
+    }
+    
+    load() {
+        try {
+            const highlights = localStorage.getItem(`ereader-highlights-${this.userId}`);
+            if (highlights) {
+                this.highlights = JSON.parse(highlights);
+            }
+            
+            const savedPage = localStorage.getItem(`ereader-page-${this.userId}`);
+            const savedPosition = localStorage.getItem(`ereader-position-${this.userId}`);
+            
+            if (savedPage) this.currentPage = parseInt(savedPage);
+            if (savedPosition) this.savedPosition = parseInt(savedPosition);
+            
+            console.log('📖 Loaded state:', { 
+                page: this.currentPage, 
+                position: this.savedPosition,
+                highlights: this.highlights.length 
+            });
+        } catch (e) {
+            console.error('Failed to load state:', e);
+        }
+    }
 
-   save(textPosition) {
-       if (this.saveTimer) {
-           clearTimeout(this.saveTimer);
-       }
-       
-       this.saveTimer = setTimeout(() => {
-           this._performSave(textPosition);
-           this.saveTimer = null;
-       }, 500);
-   }
+    save(textPosition) {
+        if (this.saveTimer) {
+            clearTimeout(this.saveTimer);
+        }
+        
+        this.saveTimer = setTimeout(() => {
+            this._performSave(textPosition);
+            this.saveTimer = null;
+        }, 500);
+    }
+    
+    saveNow(textPosition) {
+        if (this.saveTimer) {
+            clearTimeout(this.saveTimer);
+            this.saveTimer = null;
+        }
+        this._performSave(textPosition);
+    }
    
-   saveNow(textPosition) {
-       if (this.saveTimer) {
-           clearTimeout(this.saveTimer);
-           this.saveTimer = null;
-       }
-       this._performSave(textPosition);
-   }
+    _performSave(textPosition) {
+        try {
+            this.savedPosition = textPosition;
+            
+            localStorage.setItem(`ereader-page-${this.userId}`, this.currentPage);
+            localStorage.setItem(`ereader-position-${this.userId}`, textPosition);
+            localStorage.setItem(`ereader-highlights-${this.userId}`, JSON.stringify(this.highlights));
+            localStorage.setItem('frankenstein-highlights', JSON.stringify(this.highlights));
+            
+            console.log('💾 Saved state:', { 
+                page: this.currentPage, 
+                position: textPosition,
+                highlights: this.highlights.length 
+            });
+        } catch (e) {
+            console.error('Failed to save:', e);
+        }
+    }
    
-   _performSave(textPosition) {
-       try {
-           this.savedPosition = textPosition;
-           
-           localStorage.setItem(`ereader-page-${this.userId}`, this.currentPage);
-           localStorage.setItem(`ereader-position-${this.userId}`, textPosition);
-           localStorage.setItem(`ereader-highlights-${this.userId}`, JSON.stringify(this.highlights));
-           localStorage.setItem('frankenstein-highlights', JSON.stringify(this.highlights));
-           
-           console.log('💾 Saved state:', { 
-               page: this.currentPage, 
-               position: textPosition,
-               highlights: this.highlights.length 
-           });
-       } catch (e) {
-           console.error('Failed to save:', e);
-       }
-   }
+    updateProgress(position, totalLength) {
+        if (!totalLength) return;
+        
+        const percent = (position / totalLength) * 100;
+        localStorage.setItem(`ereader-progress-percent-${this.userId}`, percent.toFixed(1));
+        
+        const bookBar = document.getElementById('book-progress-fill');
+        if (bookBar) bookBar.style.width = `${percent}%`;
+        
+        // Chapter progress (ADD THIS)
+        const chapterPercent = this.calculateChapterProgress(position);
+        const chapterBar = document.getElementById('chapter-progress-fill');
+        if (chapterBar) {
+            chapterBar.style.width = `${chapterPercent}%`;
+        }
+
+        console.log('📊 Progress:', percent.toFixed(1) + '%');
+    }
+
+    calculateChapterProgress(position) {
+        // Access chapters from the loader through the parent EReader instance
+        const chapters = window.ereaderInstance?.loader?.chapters;
+        if (!chapters || !chapters.length) return 0;
+        
+        const chapter = chapters.find(c => position >= c.pos && position < c.endPos);
+        if (!chapter) return 0;
+        
+        const chapterLength = chapter.endPos - chapter.pos;
+        const positionInChapter = position - chapter.pos;
+        return Math.min(100, Math.max(0, (positionInChapter / chapterLength) * 100));
+    }
    
-   updateProgress(position, totalLength) {
-       if (!totalLength) return;
-       
-       const percent = (position / totalLength) * 100;
-       localStorage.setItem(`ereader-progress-percent-${this.userId}`, percent.toFixed(1));
-       
-       const bookBar = document.getElementById('book-progress-fill');
-       if (bookBar) bookBar.style.width = `${percent}%`;
-       
-       console.log('📊 Progress:', percent.toFixed(1) + '%');
-   }
-   
-   toggleHighlight(paragraphId, paragraphText) {
-       const index = this.highlights.findIndex(h => h.id === paragraphId);
-       
-       if (index >= 0) {
-           this.highlights.splice(index, 1);
-           console.log('🖍️ Removed highlight:', paragraphId);
-       } else {
-           this.highlights.push({
-               id: paragraphId,
-               text: paragraphText,
-               timestamp: new Date().toISOString(),
-               chapter: this.currentChapter
-           });
-           console.log('🖍️ Added highlight:', paragraphId);
-       }
+    toggleHighlight(paragraphId, paragraphText) {
+        const index = this.highlights.findIndex(h => h.id === paragraphId);
+        
+        if (index >= 0) {
+            this.highlights.splice(index, 1);
+            console.log('🖍️ Removed highlight:', paragraphId);
+        } else {
+            this.highlights.push({
+                id: paragraphId,
+                text: paragraphText,
+                timestamp: new Date().toISOString(),
+                chapter: this.currentChapter
+            });
+            console.log('🖍️ Added highlight:', paragraphId);
+        }
    }
 }
 
@@ -437,6 +457,7 @@ class EReader {
             if (!p || !p.closest('.ereader-page')) return;
             
             const id = p.getAttribute('data-id');
+
             const para = this.loader.paragraphs.find(p => p.id === id);
             
             if (para) {

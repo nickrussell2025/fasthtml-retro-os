@@ -83,7 +83,7 @@ def BookInfo(book_data, book_id):
     return Div(
         H3(f'{book_data["title"]}{subtitle_text}', cls='book-title'),
         P(f'by {book_data["author"]} ({book_data["year"]})', cls='book-author'),
-        BookProgress(book_data, book_id),
+        BookProgress(book_data),
         cls='book-info',
     )
 

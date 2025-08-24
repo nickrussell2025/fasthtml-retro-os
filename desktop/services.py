@@ -13,6 +13,8 @@ class DesktopService:
 
     def open_item(self, name: str, type: str, icon_x: int, icon_y: int):
         """Create window content only"""
+        print('🔍 DEBUG desktop_service.open_item: About to call CreateContent')
+
         content = CreateContent(name, type)
         window_data = self.window_manager.create_window(name, content, icon_x, icon_y)
 
