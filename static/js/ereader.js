@@ -463,7 +463,9 @@ class EReader {
             if (para) {
                 this.state.toggleHighlight(id, para.text);
                 this.state.saveNow(this.loader.getTextPosition(this.state.currentPage));
-                this.render();
+                const container = document.querySelector('.ereader-page');
+                const pageText = this.loader.pages[this.state.currentPage];
+                container.innerHTML = this.loader.formatText(pageText);
             }
         });
     }
